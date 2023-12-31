@@ -1,14 +1,13 @@
 # Lecture 0 : environment configurations
 
-我的环境:
+!!! note "我的环境"
+    ```
+    Linux version 5.15.133.1-microsoft-standard-WSL2
 
-```
-Linux version 5.15.133.1-microsoft-standard-WSL2
+    Ubuntu 22.04
 
-Ubuntu 22.04
-
-GCC 11.2.0
-```
+    GCC 11.2.0
+    ```
 
 ## Requirements
 

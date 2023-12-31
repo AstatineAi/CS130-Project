@@ -1,17 +1,10 @@
-# Welcome to MkDocs
+# 计算机系统 课程笔记
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+!!! abstract
+    计算机系统相关学习笔记
 
-## Commands
+    - 上海科技大学 2024 春学期 CS130 计算机系统 I 课程笔记
+    - 其他计算机系统知识
+    - Lab: Pintos 相关内容
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+Credit: Astinita
