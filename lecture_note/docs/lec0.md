@@ -29,7 +29,7 @@ https://web.stanford.edu/class/cs140/projects/pintos/pintos_12.html
 
 `sudo apt-get -y install qemu-system`
 
-## Bochs 2.6.7
+### Bochs 2.6.7
 
 下载 bochs: https://sourceforge.net/projects/bochs/files/bochs/2.6.7/
 
