@@ -24,4 +24,7 @@ jobs:
       - run: cd lecture_note
       - run: pwd
       - run: ls
+      - run: cd lecture_note
+      - run: pwd
+      - run: ls
       - run: mkdocs gh-deploy --force
