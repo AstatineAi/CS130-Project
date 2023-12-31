@@ -1,3 +1,9 @@
 site_name: CS130 计算机系统 笔记
 theme:
   name: material
+
+nav:
+  - 首页: 'index.md'
+  - 课程笔记: 
+    - Lecture 0: 'lec0.md'
+  # - 其他笔记:

@@ -14,15 +14,23 @@ GCC 11.2.0
 
 https://web.stanford.edu/class/cs140/projects/pintos/pintos_12.html
 
-### 安装 Bochs/qemu, 获取 pintos
+## 前置安装/下载
 
 首先: `sudo apt-get update` 并且 `sudo apt-get upgrade`
 
-`sudo apt-get -y install build-essential automake git libncurses5-dev texinfo expat libexpat1-dev wget qemu-system`
+`sudo apt-get -y install build-essential automake git libncurses5-dev texinfo expat libexpat1-dev wget`
 
 获取 pintos: `git clone git://pintos-os.org/pintos-anon pintos`
 
 由于这里是 git protocol, 设置 git 的 `http.proxy` 是一点用没有的, 下载速度慢是正常现象.
+
+## 模拟器
+
+### QEMU
+
+`sudo apt-get -y install qemu-system`
+
+## Bochs 2.6.7
 
 下载 bochs: https://sourceforge.net/projects/bochs/files/bochs/2.6.7/
 
@@ -41,6 +49,8 @@ sudo make install
 ```
 
 然后回到 pintos 的目录, 运行命令 `bochs --help` 会提示你版本是 `2.6.7` 且是刚刚编译的.
+
+## 配置 Pintos (使用 qemu)
 
 为了方便运行 pintos, 在 `.bashrc` 加上对应位置的 export 命令.
 
@@ -69,7 +79,7 @@ pintos -- run alarm-multiple
 
 能跑就是基本成功.
 
-在 在 `pintos/src/threads` 下:
+在 `pintos/src/threads` 下:
 
 ```
 make check
