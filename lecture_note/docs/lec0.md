@@ -11,7 +11,13 @@
 
     64 位系统.
 
-## Requirements
+## 其他可能更优的教程
+
+1. 使用 UC Berkeley 的仓库 : https://github.com/Berkeley-CS162
+2. 使用 JHU 的仓库 : https://www.cs.jhu.edu/~huang/cs318/fall17/project/guide.html
+3. 使用 PKU 的 docker : https://pkuflyingpig.gitbook.io/pintos/
+
+## 环境要求
 
 https://web.stanford.edu/class/cs140/projects/pintos/pintos_12.html
 
