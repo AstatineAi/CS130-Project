@@ -9,6 +9,8 @@
     GCC 11.2.0
     ```
 
+    64 位系统.
+
 ## Requirements
 
 https://web.stanford.edu/class/cs140/projects/pintos/pintos_12.html
@@ -89,3 +91,11 @@ make check
 不是 27 fail 27 就是完全成功.
 
 在我用 WSL 命令行和 vim 改了许久之后, 突然想起来其实直接在打开了对应文件夹的 VS Code 就能快速完成这些破事了.
+
+## 使用 gdb 进行 debug
+
+开启两个终端, 第一个在 `pintos/src/threads/build/` 下 `qemu --gdb -- run yourTest`
+
+在 `pintos/src/threads/build/` 下 `pintos-gdb`, 进入后运行 `set architecture i386:x86-64`, 然后运行 `debugpintos`
+
+之后可以正常打断点运行.
