@@ -47,4 +47,6 @@ nav:
   - 首页: 'index.md'
   - 课程笔记: 
     - Lecture 0: 'lec0.md'
+  - pintos:
+    - Project 1: 'pintos/proj1.md'
   # - 其他笔记:
