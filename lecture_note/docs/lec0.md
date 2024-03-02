@@ -1,21 +1,28 @@
 # Lecture 0 : environment configurations
 
+**deprecated**: 仅仅记录开课前在自己电脑上安装遇到的问题和 trouble shooting, 具体配置请参考习题课.
+
 !!! note "我的环境"
+    请尽量选择旧版本的 Debian 及其衍生发行版, 如 Ubuntu 18.04 LTS. (参见下方安装时 `stropts.h` 部分)
+
     ```
     Linux version 5.15.133.1-microsoft-standard-WSL2
 
-    Ubuntu 22.04
+    Ubuntu 22.04 (extremely bad choice, not recommanded)
 
     GCC 11.2.0
     ```
 
     64 位系统.
 
-## 其他可能更优的教程
+WLS 提示无法安装请参考 https://learn.microsoft.com/zh-cn/windows/wsl/troubleshooting#installation-issues.
+
+## 其他可能 (显然) 更优的教程
 
 1. 使用 UC Berkeley 的仓库 : https://github.com/Berkeley-CS162
 2. 使用 JHU 的仓库 : https://www.cs.jhu.edu/~huang/cs318/fall17/project/guide.html
 3. 使用 PKU 的 docker : https://pkuflyingpig.gitbook.io/pintos/
+4. https://github.com/youcunhan/cs130-OperatingSystem-pintos/blob/master/pintos-install.sh
 
 ## 环境要求
 
@@ -74,6 +81,8 @@ sudo make install
 - `/utils/pintos` 103 行左右 `bochs` 改为 `qemu`
 - `/utils/pintos` 621 行左右: `qemu` 改为 `qemu-system-x86_64`
 
+上面的 "替换为完整路径" 操作均可通过把对应的文件夹添加到 `PATH` 解决.
+
 在 `pintos/src/threads` 下:
 
 ```
@@ -81,7 +90,7 @@ make
 
 cd build
 
-pintos -- run alarm-multiple
+pintos --qemu -- run alarm-multiple
 ```
 
 能跑就是基本成功.
@@ -94,7 +103,7 @@ make check
 
 进入漫长的等待时间.
 
-不是 27 fail 27 就是完全成功.
+27 fail 20 就是完全成功.
 
 在我用 WSL 命令行和 vim 改了许久之后, 突然想起来其实直接在打开了对应文件夹的 VS Code 就能快速完成这些破事了.
 
@@ -102,6 +111,12 @@ make check
 
 开启两个终端, 第一个在 `pintos/src/threads/build/` 下 `qemu --gdb -- run yourTest`
 
-在 `pintos/src/threads/build/` 下 `pintos-gdb`, 进入后运行 `set architecture i386:x86-64`, 然后运行 `debugpintos`
+在 `pintos/src/threads/build/` 下 `pintos-gdb`
+
+尝试运行 `debugpintos` (在 gdb macros 里面声明的, 用处是连接到 qemu, 直接用 `target remote localhost:1234` 也可以)
+
+无报错或者运行后再运行指令 `c` 可以正常继续就是配置正确.
+
+如果出现 `architecture` 相关报错, 进入后运行 `set architecture i386:x86-64`, 然后运行 `debugpintos`
 
 之后可以正常打断点运行.
