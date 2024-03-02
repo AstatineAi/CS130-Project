@@ -23,8 +23,8 @@ typedef void *heap_elem;
 /* Compares the value of two heap elements A and B
    Returns true if A is less than B, or
    false if A is greater than or equal to B. */
-typedef bool heap_less_func (const heap_elem *a,
-                             const heap_elem *b);
+typedef bool heap_less_func (const heap_elem a,
+                             const heap_elem b);
 
 /* Heap. */
 

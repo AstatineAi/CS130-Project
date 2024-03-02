@@ -1,5 +1,6 @@
 #include "heap.h"
 #include "../debug.h"
+#include <stdio.h>
 
 static void
 swap(heap_elem *a, heap_elem *b)
@@ -64,9 +65,9 @@ heap_empty (struct heap *heap)
 void
 up_heap (struct heap *heap, size_t index)
 {
-  for (; index > 0; index >>= 1)
+  for (; index > 1; index >>= 1)
     {
-      if (heap->less(&heap->elems[index >> 1], &heap->elems[index]))
+      if (heap->less(heap->elems[index >> 1], heap->elems[index]))
         swap(&heap->elems[index >> 1], &heap->elems[index]);
       else
         break;
@@ -79,9 +80,9 @@ down_heap(struct heap *heap, size_t index)
   for (size_t ch; (index << 1) <= heap->size; index = ch)
     {
       ch = index << 1;
-      ch += (ch < heap->size && heap->less(&heap->elems[ch], 
-                                           &heap->elems[ch | 1]));
-      if (heap->less(&heap->elems[index], &heap->elems[ch]))
+      ch += (ch < heap->size && heap->less(heap->elems[ch], 
+                                           heap->elems[ch | 1]));
+      if (heap->less(heap->elems[index], heap->elems[ch]))
         swap(&heap->elems[index], &heap->elems[ch]);
       else
         break;
