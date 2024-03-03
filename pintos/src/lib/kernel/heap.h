@@ -50,7 +50,7 @@ size_t heap_size (struct heap *);
 bool heap_empty (struct heap *);
 
 /* Auxiliary functions */
-void up_heap(struct heap *, size_t);
-void down_heap(struct heap *, size_t);
+void up_heap (struct heap *, size_t);
+void down_heap (struct heap *, size_t);
 
 #endif

@@ -20,9 +20,20 @@
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
-/* List of processes in THREAD_READY state, that is, processes
+/* Heap of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
-static struct list ready_list;
+static struct heap ready_heap;
+
+static heap_less_func cmp_thread_priority;
+
+static bool
+cmp_thread_priority(const heap_elem a,
+                    const heap_elem b)
+{
+  const struct thread *elem_a = (struct thread *)a;
+  const struct thread *elem_b = (struct thread *)b;
+  return elem_a->priority < elem_b->priority;
+}
 
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
@@ -90,7 +101,7 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
-  list_init (&ready_list);
+  heap_init (&ready_heap, cmp_thread_priority);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */
@@ -200,6 +211,8 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+  if (priority > thread_current ()->priority)
+    thread_yield ();
 
   return tid;
 }
@@ -237,7 +250,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  heap_push (&ready_heap, t);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -308,7 +321,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    heap_push (&ready_heap, cur);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -335,7 +348,18 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  struct thread *cur = thread_current ();
+  cur->priority_origin = new_priority;
+  if (new_priority > cur->priority)
+    cur->priority = new_priority;
+  thread_yield ();
+}
+
+/* Get priority from priority donation */
+void
+thread_get_priority_donation (struct thread *t)
+{
+  
 }
 
 /* Returns the current thread's priority. */
@@ -461,7 +485,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
+  t->priority_origin = priority;
   t->priority = priority;
+  t->wake_time = (int64_t)0;
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
@@ -490,10 +516,10 @@ alloc_frame (struct thread *t, size_t size)
 static struct thread *
 next_thread_to_run (void) 
 {
-  if (list_empty (&ready_list))
+  if (heap_empty (&ready_heap))
     return idle_thread;
   else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    return heap_pop (&ready_heap);
 }
 
 /* Completes a thread switch by activating the new thread's page

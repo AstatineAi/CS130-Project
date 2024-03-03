@@ -34,20 +34,14 @@ static void real_time_delay (int64_t num, int32_t denom);
 /* Heap storing sleeping threads. */
 static struct heap sleep_thread_heap;
 
-struct sleep_thread_elem
-{
-  struct thread *t;   /* thread */
-  int64_t wake_time; /* awake time (ticks) */
-};
-
 static heap_less_func cmp_awake_time;
 
 static bool
 cmp_awake_time (const heap_elem a,
                 const heap_elem b)
 {
-  struct sleep_thread_elem *elem_a = (struct sleep_thread_elem *)a;
-  struct sleep_thread_elem *elem_b = (struct sleep_thread_elem *)b;
+  struct thread *elem_a = (struct thread *)a;
+  struct thread *elem_b = (struct thread *)b;
   return elem_a->wake_time > elem_b->wake_time;
 }
 
@@ -58,7 +52,7 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
-  heap_init(&sleep_thread_heap, cmp_awake_time);
+  heap_init (&sleep_thread_heap, cmp_awake_time);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -111,14 +105,15 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  if (ticks < 0)
+    return;
+
   enum intr_level old_level = intr_disable ();
-  struct sleep_thread_elem *t_sleep = (struct sleep_thread_elem *)
-                                      malloc(sizeof(struct sleep_thread_elem));
-  t_sleep->wake_time = timer_ticks () + ticks;
-  t_sleep->t = thread_current ();
-  heap_push(&sleep_thread_heap, t_sleep);
-  thread_block();
-  intr_set_level(old_level);
+  struct thread *t = thread_current ();
+  t->wake_time = timer_ticks () + ticks;
+  heap_push (&sleep_thread_heap, t);
+  thread_block ();
+  intr_set_level (old_level);
 }
 
 /* Put threads that have waited for enough amount of time
@@ -126,14 +121,16 @@ timer_sleep (int64_t ticks)
 void
 timer_wake (int64_t cur_time)
 {
-  while (!heap_empty(&sleep_thread_heap))
+  while (!heap_empty (&sleep_thread_heap))
   {
-    struct sleep_thread_elem *top = (struct sleep_thread_elem *)
-                                    heap_top(&sleep_thread_heap);
+    struct thread *top = (struct thread *)
+                          heap_top (&sleep_thread_heap);
     if (top->wake_time > cur_time)
       break;
-    heap_pop(&sleep_thread_heap);
-    thread_unblock(top->t);
+    heap_pop (&sleep_thread_heap);
+    thread_unblock (top);
+    if (top->priority > thread_current()->priority)
+      intr_yield_on_return ();
   }
 }
 
