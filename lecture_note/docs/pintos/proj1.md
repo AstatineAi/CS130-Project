@@ -163,31 +163,50 @@ lock_acquire (struct lock *lock)
 
 线程可以尝试获取多把锁, 但是在第一次 `lock_acquire()` 失败的时候就会等待第一把锁, 暂时不会把优先级捐赠给下一把锁.
 
+为什么等待一把锁不是 busy waiting? 因为线程本身被 block, 需要等待 lock->sema 来 unblock 线程, 此时也要优先 unblock 高优先级线程.
+
 线程可以同时获取到多把锁, 得到其中最高的优先级的捐赠.
+
+拿着锁 = 可能被 donate
+
+等待锁 = donate 给别的 thread
 
 #### `thread_set_priority()`
 
 更新非捐赠所得的优先级 `priority_original`
 
+
+```
 - 如果当前线程在等锁 (一把)
   - 捐赠给锁.
   - 锁需要考虑之前捐赠出的优先级是不是不存在了 (例如优先级 50 捐赠出去, 但是 50 优先级的线程被 set 到了低优先级).
   - 如果高了或者没现在的优先级不是捐赠得到的, 更新 `priority`
+```
+
+上面的分析哪里错了?
+
+答案在于, 在等待锁的线程会处于 block 状态, 不能改变优先级.
+
+所以说, 只有持有锁的线程或者和锁无关的线程会进入 `thread_set_priority()`
 
 - 如果当前线程持有锁 (可能多把)
   - 高于捐赠得到的优先级: 更新 `priority`
   - 不高于捐赠得到的优先级: 并没有发生什么事情.
 
+- 如果当前线程不持有锁
+  - 更新 `priority`
+
 #### `lock_acquire()`
 
-尝试 `sema_down()`
+- 直接拿到
+  - 这锁也没人要啊, 拿了.
+  - 可能中间被打断过, 所以说让锁再去更新一下, 看看有没有好心人的 donation
 
-- 成功了
-  - 拿到锁
-  - 获取捐献的优先级
-- 失败了
-  - 捐赠给锁 (锁捐赠给 holder -> holder 捐赠给锁 -> ...)
-  - 加进 `list`, 开始摆烂
+- 没拿到
+  - donate 给锁, 让锁更新 holder
+  - 被 block, 等 semaphore
+  - 终于放出来了, 把锁拿走, 更新一下锁收到的 priority, 更新一下自己的 priority
+
 
 问题: 死锁?
 
@@ -205,13 +224,13 @@ TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 
 解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数即可.
 
-死锁实在没法解决, 可以考虑加一个检查是否所有的线程都被 block, 如果如此就立一个 flag 清除所有的线程, 然后 PANIC.
+外界死锁实在没法解决, 但是属于 UB, 不解决也行. 可以考虑加一个检查是否所有的线程都被 block, 如果如此就立一个 flag 清除所有的线程, 然后 PANIC.
 
 #### `lock_release()`
 
-`sema_up()`
+- 不被这个 lock donate 了, 更新一下自己的 priority
 
-- 锁更新被捐赠的 priority -> holder 更新 -> 锁更新 -> holder 更新 ...
+`sema_up()`
 
 问题: 被更新 priority 的 thread 还在堆 / ready_list 里面, 但是插入已经发生了, 该 heap_up / heap_down?
 
@@ -220,3 +239,9 @@ TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 ## Task 3
 
 在全局 `bool` 变量 `thread_mlfqs` 为 `true` 的时候, 启用 Multilevel Feedback Queue Scheduling, 而不是 Task 2 的基于优先级的 Round Robin 调度.
+
+### 实现定点数
+
+在 pintos 内核中没有浮点数运算, 需要手动实现定点数来完成 `load_avg`, `nice` 等 MLFQS 相关值的计算.
+
+使用 32 位 `int` 保存一个定点数, 令 `x` 表示实数 `x / (2^14)`, 即使用最低 14 位存储分数.
