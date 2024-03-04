@@ -120,6 +120,8 @@ alarm-negative
 
 相同优先级, 则先进先出.
 
+需要额外记录进入顺序.
+
 ### priority-preempt
 
 高优先级线程 `thread_create()` 时可以抢占.
@@ -201,6 +203,10 @@ TA 拿锁 B, TA 捐赠给 B, B 捐赠给 TB, interrupt
 TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 ```
 
+解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数即可.
+
+死锁实在没法解决, 可以考虑加一个检查是否所有的线程都被 block, 如果如此就立一个 flag 清除所有的线程, 然后 PANIC.
+
 #### `lock_release()`
 
 `sema_up()`
@@ -208,6 +214,8 @@ TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 - 锁更新被捐赠的 priority -> holder 更新 -> 锁更新 -> holder 更新 ...
 
 问题: 被更新 priority 的 thread 还在堆 / ready_list 里面, 但是插入已经发生了, 该 heap_up / heap_down?
+
+解决?方式: 不管, 下一次进堆的时候就好了.
 
 ## Task 3
 
