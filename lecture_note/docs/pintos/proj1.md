@@ -3,8 +3,8 @@
 !!! note "Overview"
     - Task 1 : solve busy waiting
     - Task 2 :
-      - priority schedule
-      - priority donate
+        - priority schedule
+        - priority donation
     - Task3 : advanced schedule
 
 ## Task 1
@@ -190,22 +190,22 @@ lock_acquire (struct lock *lock)
 所以说, 只有持有锁的线程或者和锁无关的线程会进入 `thread_set_priority()`
 
 - 如果当前线程持有锁 (可能多把)
-  - 高于捐赠得到的优先级: 更新 `priority`
-  - 不高于捐赠得到的优先级: 并没有发生什么事情.
+    - 高于捐赠得到的优先级: 更新 `priority`
+    - 不高于捐赠得到的优先级: 并没有发生什么事情.
 
 - 如果当前线程不持有锁
-  - 更新 `priority`
+    - 更新 `priority`
 
 #### `lock_acquire()`
 
 - 直接拿到
-  - 这锁也没人要啊, 拿了.
-  - 可能中间被打断过, 所以说让锁再去更新一下, 看看有没有好心人的 donation
+    - 这锁也没人要啊, 拿了.
+    - 可能中间被打断过, 所以说让锁再去更新一下, 看看有没有好心人的 donation
 
 - 没拿到
-  - donate 给锁, 让锁更新 holder
-  - 被 block, 等 semaphore
-  - 终于放出来了, 把锁拿走, 更新一下锁收到的 priority, 更新一下自己的 priority
+    - donate 给锁, 让锁更新 holder
+    - 被 block, 等 semaphore
+    - 终于放出来了, 把锁拿走, 更新一下锁收到的 priority, 更新一下自己的 priority
 
 
 问题: 死锁?
