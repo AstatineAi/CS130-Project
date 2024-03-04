@@ -132,7 +132,7 @@ alarm-negative
 
 condition 也优先唤醒优先级高的.
 
-### 实现
+##  Task 2 实现
 
 分析 `lock_acquire()` 的行为.
 
@@ -154,3 +154,61 @@ lock_acquire (struct lock *lock)
 如果 acquire 失败了, 捐赠自己的 `priority`.
 
 坏了, 那我缺的 lock 捐赠给 thread 这块谁给我补啊?
+
+思考失败, 重新思考.
+
+### 线程的行为
+
+线程可以尝试获取多把锁, 但是在第一次 `lock_acquire()` 失败的时候就会等待第一把锁, 暂时不会把优先级捐赠给下一把锁.
+
+线程可以同时获取到多把锁, 得到其中最高的优先级的捐赠.
+
+#### `thread_set_priority()`
+
+更新非捐赠所得的优先级 `priority_original`
+
+- 如果当前线程在等锁 (一把)
+  - 捐赠给锁.
+  - 锁需要考虑之前捐赠出的优先级是不是不存在了 (例如优先级 50 捐赠出去, 但是 50 优先级的线程被 set 到了低优先级).
+  - 如果高了或者没现在的优先级不是捐赠得到的, 更新 `priority`
+
+- 如果当前线程持有锁 (可能多把)
+  - 高于捐赠得到的优先级: 更新 `priority`
+  - 不高于捐赠得到的优先级: 并没有发生什么事情.
+
+#### `lock_acquire()`
+
+尝试 `sema_down()`
+
+- 成功了
+  - 拿到锁
+  - 获取捐献的优先级
+- 失败了
+  - 捐赠给锁 (锁捐赠给 holder -> holder 捐赠给锁 -> ...)
+  - 加进 `list`, 开始摆烂
+
+问题: 死锁?
+
+```
+两个线程 TA, TB, 两个锁 A, B.
+
+TA 拿锁 A, interrupt 切换到 TB
+
+TB 拿锁 B, interrupt 切换到 TA
+
+TA 拿锁 B, TA 捐赠给 B, B 捐赠给 TB, interrupt
+
+TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
+```
+
+#### `lock_release()`
+
+`sema_up()`
+
+- 锁更新被捐赠的 priority -> holder 更新 -> 锁更新 -> holder 更新 ...
+
+问题: 被更新 priority 的 thread 还在堆 / ready_list 里面, 但是插入已经发生了, 该 heap_up / heap_down?
+
+## Task 3
+
+在全局 `bool` 变量 `thread_mlfqs` 为 `true` 的时候, 启用 Multilevel Feedback Queue Scheduling, 而不是 Task 2 的基于优先级的 Round Robin 调度.
