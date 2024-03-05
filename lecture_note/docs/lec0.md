@@ -15,7 +15,7 @@
 
     64 位系统.
 
-WLS 提示无法安装请参考 https://learn.microsoft.com/zh-cn/windows/wsl/troubleshooting#installation-issues.
+WSL 提示无法安装请参考 https://learn.microsoft.com/zh-cn/windows/wsl/troubleshooting#installation-issues.
 
 ## 其他可能 (显然) 更优的教程
 

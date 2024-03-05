@@ -124,7 +124,7 @@ alarm-negative
 
 ### priority-preempt
 
-高优先级线程 `thread_create()` 时可以抢占.
+高优先级线程就绪 (`thread_create()` / `thread_unblock()`) 时, 抢占.
 
 ### priority-sema
 
@@ -170,6 +170,34 @@ lock_acquire (struct lock *lock)
 拿着锁 = 可能被 donate
 
 等待锁 = donate 给别的 thread
+
+thread -> lock:
+- donate 发生的时间: acquire 失败, 被 block 之前 donate 给锁
+- donate 结束的时间: 由 semaphore unblock, 获得锁
+
+lock -> thread:
+- donate 发生的时间: acquire 失败, 接受别的 donate 之后 donate 给 holder
+- donate 结束的时间: release, 原 holder 可以接受其他锁的 donation
+
+#### 如何更新 `priority`?
+
+无死锁的 donation 的关系构成一个内向树: 所有的线程最多等待一个锁, 对那个锁 donate, 一个线程可以同时持有多个锁, 从多个锁获得 donation.
+
+`lock_release()` 只发生在根节点, 此时会得到一个新的根节点, 那个节点不需要更新, 更新老的根节点.
+
+`lock_acquire()` 是加边, 需要向父亲贡献, 直到达到根节点.
+
+`thread_set_priority()` 只发生在根节点, 无影响.
+
+两个更新的方向:
+
+1. thread->lock_waiting (--捐赠给->) lock->holder (--捐赠给->) thread->lock_waiting (--捐赠给->) ...
+2. thread->locks_holding_list (--获取捐赠->) lock->semaphor->waiters (--获取捐赠->) thread->locks_holding_list (--获取捐赠->)...
+
+一个重要的行为是: 捐赠优先级 (即等待锁) 的 thread, 在得到锁之前, 这个 thread 的 priority 可能改变.
+
+- 不会 `thread_set_priority`
+- 可能从别处得到新的 donation, 如 TA 拿着锁 A 等待锁 B, TB 拿着锁 B, 此时 TC 请求锁 A, TB 的优先级因此受到 TC 捐赠.
 
 #### `thread_set_priority()`
 
