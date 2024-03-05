@@ -33,6 +33,7 @@ struct heap
     size_t size;                     /* Heap size. */
     heap_elem elems[MAX_HEAP_SIZE];  /* Heap elements. */
     heap_less_func *less;            /* Heap compare function. */
+    int64_t push_cnt;                /* counter of element pushed. */
   };
 
 /* Heap initialization. */
@@ -48,6 +49,7 @@ heap_elem heap_pop (struct heap *);
 /* Heap properties. */
 size_t heap_size (struct heap *);
 bool heap_empty (struct heap *);
+int64_t heap_entry_count (struct heap *);
 
 /* Auxiliary functions */
 void up_heap (struct heap *, size_t);

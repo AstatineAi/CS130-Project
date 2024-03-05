@@ -24,15 +24,26 @@
    that are ready to run but not actually running. */
 static struct heap ready_heap;
 
-static heap_less_func cmp_thread_priority;
+static heap_less_func cmp_thread_priority_heap;
 
 static bool
-cmp_thread_priority(const heap_elem a,
-                    const heap_elem b)
+cmp_thread_priority_heap (const heap_elem a,
+                          const heap_elem b)
 {
   const struct thread *elem_a = (struct thread *)a;
   const struct thread *elem_b = (struct thread *)b;
-  return elem_a->priority < elem_b->priority;
+  return elem_a->priority != elem_b->priority ? 
+         elem_a->priority < elem_b->priority :
+         elem_a->entry_ord > elem_b->entry_ord;
+}
+
+bool
+cmp_thread_priority (const struct list_elem *a,
+                     const struct list_elem *b,
+                     void *aux UNUSED)
+{
+  return list_entry (a, struct thread, elem)->priority < 
+         list_entry (b, struct thread, elem)->priority;
 }
 
 /* List of all processes.  Processes are added to this list
@@ -101,7 +112,7 @@ thread_init (void)
   ASSERT (intr_get_level () == INTR_OFF);
 
   lock_init (&tid_lock);
-  heap_init (&ready_heap, cmp_thread_priority);
+  heap_init (&ready_heap, cmp_thread_priority_heap);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */
@@ -250,6 +261,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+  t->entry_ord = heap_entry_count (&ready_heap);
   heap_push (&ready_heap, t);
   t->status = THREAD_READY;
   intr_set_level (old_level);
@@ -320,8 +332,11 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread) 
-    heap_push (&ready_heap, cur);
+  if (cur != idle_thread)
+    {
+      cur->entry_ord = heap_entry_count (&ready_heap);
+      heap_push (&ready_heap, cur);
+    }
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -349,17 +364,29 @@ void
 thread_set_priority (int new_priority) 
 {
   struct thread *cur = thread_current ();
+  int old_priority = cur->priority;
   cur->priority_origin = new_priority;
-  if (new_priority > cur->priority)
+  if (cur->priority < new_priority || list_empty (&cur->locks_holding_list))
     cur->priority = new_priority;
-  thread_yield ();
+  if (cur->priority < old_priority)
+    thread_yield ();
 }
 
-/* Get priority from priority donation */
+/* Update thread priority from original
+   priority and priority donation.  */
 void
-thread_get_priority_donation (struct thread *t)
+thread_update_priority (struct thread *t)
 {
-  
+  int priority = t->priority_origin;
+  if (!list_empty (&t->locks_holding_list))
+    {
+      int donate_priority = list_entry (list_max (&t->locks_holding_list, 
+                                                  cmp_lock_priority, NULL), 
+                                        struct lock, elem)->priority_donate;
+      if (donate_priority > priority)
+        priority = donate_priority;
+    }
+  t->priority = priority;
 }
 
 /* Returns the current thread's priority. */
@@ -488,7 +515,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority_origin = priority;
   t->priority = priority;
   t->wake_time = (int64_t)0;
+  t->entry_ord = 0;
   t->magic = THREAD_MAGIC;
+
+  t->lock_waiting = NULL;
+  list_init (&t->locks_holding_list);
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);

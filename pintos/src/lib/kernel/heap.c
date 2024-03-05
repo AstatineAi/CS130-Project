@@ -17,6 +17,7 @@ heap_init (struct heap *heap, heap_less_func *less)
   ASSERT (heap != NULL);
   heap->size = 0;
   heap->less = less;
+  heap->push_cnt = 0;
 }
 
 heap_elem
@@ -57,6 +58,12 @@ bool
 heap_empty (struct heap *heap)
 {
   return heap->size == 0;
+}
+
+int64_t
+heap_entry_count (struct heap *heap)
+{
+  return heap->push_cnt++;
 }
 
 /* up_heap, down_heap

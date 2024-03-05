@@ -3,9 +3,9 @@
 !!! note "Overview"
     - Task 1 : solve busy waiting
     - Task 2 :
-        - priority schedule
+        - priority scheduling (Round Robin)
         - priority donation
-    - Task3 : advanced schedule
+    - Task3 : advanced scheduler
 
 ## Task 1
 
