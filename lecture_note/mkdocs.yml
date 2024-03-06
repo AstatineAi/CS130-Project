@@ -49,4 +49,5 @@ nav:
     - Lecture 0: 'lec0.md'
   - pintos:
     - Project 1: 'pintos/proj1.md'
+    - Project 2: 'pintos/proj2.md'
   # - 其他笔记:

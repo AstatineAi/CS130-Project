@@ -1,5 +1,8 @@
 # Project 1: Threads
 
+!!! warning "No plagiarism"
+    If you are enrolled in CS130, you may not copy code from this repository.
+
 !!! note "Overview"
     - Task 1 : solve busy waiting
     - Task 2 :
@@ -163,9 +166,9 @@ lock_acquire (struct lock *lock)
 
 线程可以尝试获取多把锁, 但是在第一次 `lock_acquire()` 失败的时候就会等待第一把锁, 暂时不会把优先级捐赠给下一把锁.
 
-为什么等待一把锁不是 busy waiting? 因为线程本身被 block, 需要等待 lock->sema 来 unblock 线程, 此时也要优先 unblock 高优先级线程.
+为什么等待一把锁不是 busy waiting? 因为线程本身被 block, 需要等待 lock->sema 来 unblock 线程, 此时也要优先 unblock 高优先级线程. (所以其实可以使用 `semaphore` 来完成 alarm 部分)
 
-线程可以同时获取到多把锁, 得到其中最高的优先级的捐赠.
+线程可以同时持有多把锁, 得到其中最高的优先级的捐赠.
 
 拿着锁 = 可能被 donate
 
@@ -250,7 +253,7 @@ TA 拿锁 B, TA 捐赠给 B, B 捐赠给 TB, interrupt
 TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 ```
 
-解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数?.
+解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数?
 
 外界死锁实在没法解决, 但是属于 UB, 不解决也行. 可以考虑加一个检查是否所有的线程都被 block, 如果如此就立一个 flag 清除所有的线程, 然后 PANIC.
 
