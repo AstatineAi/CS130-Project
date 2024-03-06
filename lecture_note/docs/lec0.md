@@ -92,7 +92,7 @@ pintos --qemu -- run alarm-multiple
 
 能跑就是基本成功.
 
-在 `pintos/src/threads` 下:
+在 `pintos/src/threads/build/` 下:
 
 ```
 make check
@@ -106,7 +106,7 @@ make check
 
 ## 使用 gdb 进行 debug
 
-开启两个终端, 第一个在 `pintos/src/threads/build/` 下 `qemu --gdb -- run yourTest`
+开启两个终端, 第一个在 `pintos/src/threads/build/` 下 `pintos --qemu --gdb -- run testName`
 
 在 `pintos/src/threads/build/` 下 `pintos-gdb`
 
