@@ -250,7 +250,7 @@ TA 拿锁 B, TA 捐赠给 B, B 捐赠给 TB, interrupt
 TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 ```
 
-解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数即可.
+解决?方式: 对于嵌套优先级捐赠关系的环 (From document "If necessary, you may impose a reasonable limit on depth of nested priority donation, such as 8 levels."), 加一个传递层数?.
 
 外界死锁实在没法解决, 但是属于 UB, 不解决也行. 可以考虑加一个检查是否所有的线程都被 block, 如果如此就立一个 flag 清除所有的线程, 然后 PANIC.
 
@@ -262,7 +262,7 @@ TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 
 问题: 被更新 priority 的 thread 还在堆 / ready_list 里面, 但是插入已经发生了, 该 heap_up / heap_down?
 
-解决?方式: 不管, 下一次进堆的时候就好了.
+解决?方式: 在完成从叶子节点到根节点的 donation 之后, 禁用中断然后 $O(n)$ 建堆.
 
 ## Task 3
 
@@ -273,3 +273,32 @@ TB 拿锁 A, TB 捐赠给 A, A 捐赠给 TA, TA 捐赠给 B...
 在 pintos 内核中没有浮点数运算, 需要手动实现定点数来完成 `load_avg`, `nice` 等 MLFQS 相关值的计算.
 
 使用 32 位 `int` 保存一个定点数, 令 `x` 表示实数 `x / (2^14)`, 即使用最低 14 位存储分数.
+
+
+### 更改 nice
+
+nice 只来自外界传入 / 从 parent thread 继承, 修改后更新优先级即可.
+
+### 计算 priority
+
+$$
+priority = PRI_MAX - \dfrac{1}{4} recent_cpu - 2 \cdot nice
+$$
+
+需要控制范围不超过 `PRI_MIN` 到 `PRI_MAX`.
+
+### 计算 recent_cpu
+
+$$
+recent_cpu = \dfrac{2 \cdot load_avg}{2 \cdot load_avg + 1} \cdor recent_cpu + nice
+$$
+
+### 计算 load_avg
+
+`load_avg` 是全局的, 不是某个线程的属性.
+
+$$
+load_avg = \dfrac{59}{60} load_avg + \dfrac{1}{60} ready_thread
+$$
+
+$ready_thread$ 代表正在运行/就绪的线程数量.

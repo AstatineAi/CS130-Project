@@ -20,6 +20,15 @@ heap_init (struct heap *heap, heap_less_func *less)
   heap->push_cnt = 0;
 }
 
+/* Rebuild heap */
+void
+heap_rebuild (struct heap *heap)
+{
+  ASSERT (heap != NULL);
+  for (size_t i = heap->size; i > 0; i--)
+    down_heap (heap, i);
+}
+
 heap_elem
 heap_top (struct heap *heap)
 {

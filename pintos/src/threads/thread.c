@@ -4,6 +4,7 @@
 #include <random.h>
 #include <stdio.h>
 #include <string.h>
+#include "devices/timer.h"
 #include "threads/flags.h"
 #include "threads/interrupt.h"
 #include "threads/intr-stubs.h"
@@ -22,7 +23,7 @@
 
 /* Heap of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
-static struct heap ready_heap;
+struct heap ready_heap;
 
 static heap_less_func cmp_thread_priority_heap;
 
@@ -44,6 +45,13 @@ cmp_thread_priority (const struct list_elem *a,
 {
   return list_entry (a, struct thread, elem)->priority < 
          list_entry (b, struct thread, elem)->priority;
+}
+
+/* Rebuild ready heap. */
+void
+sort_ready_heap (void)
+{
+  heap_rebuild (&ready_heap);
 }
 
 /* List of all processes.  Processes are added to this list
@@ -80,6 +88,7 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
+int load_avg;
 
 static void kernel_thread (thread_func *, void *aux);
 
@@ -120,6 +129,8 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+
+  load_avg = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -155,6 +166,19 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
+  if (thread_mlfqs)
+    {
+      if (t != idle_thread)
+        t->recent_cpu = fp_int_add (t->recent_cpu, 1);
+      int64_t ticks = timer_ticks ();
+      if (ticks % 4 == 0)
+        thread_foreach (thread_update_priority, NULL);
+      if (ticks % TIMER_FREQ == 0)
+        {
+          update_load_avg ();
+          thread_foreach (thread_update_recent_cpu, NULL);
+        }
+    }
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
@@ -204,6 +228,20 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+
+  /* Initialize mlfqs options. */
+  if (thread_mlfqs)
+    {
+      struct thread *cur = thread_current ();
+      if (cur != initial_thread)
+        {
+          t->nice = cur->nice;
+          t->recent_cpu = cur->recent_cpu;
+        }
+      else
+        t->nice = t->recent_cpu = 0;
+      thread_update_priority(thread_current (), NULL);
+    }
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -363,6 +401,8 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  if (thread_mlfqs)
+    return ;
   struct thread *cur = thread_current ();
   int old_priority = cur->priority;
   cur->priority_origin = new_priority;
@@ -375,8 +415,19 @@ thread_set_priority (int new_priority)
 /* Update thread priority from original
    priority and priority donation.  */
 void
-thread_update_priority (struct thread *t)
+thread_update_priority (struct thread *t, void *aux UNUSED)
 {
+  if (thread_mlfqs)
+    {
+      t->priority = PRI_MAX;
+      t->priority -= fptoi_round (fp_int_div (t->recent_cpu, 4));
+      t->priority -= 2 * t->nice;
+      if (t->priority > PRI_MAX)
+        t->priority = PRI_MAX;
+      else if (t->priority < PRI_MIN)
+        t->priority = PRI_MIN;
+      return;
+    }
   int priority = t->priority_origin;
   if (!list_empty (&t->locks_holding_list))
     {
@@ -398,33 +449,58 @@ thread_get_priority (void)
 
 /* Sets the current thread's nice value to NICE. */
 void
-thread_set_nice (int nice UNUSED) 
+thread_set_nice (int nice) 
 {
-  /* Not yet implemented. */
+  struct thread *cur = thread_current ();
+  cur->nice = nice;
+  thread_update_priority (cur, NULL);
+  thread_yield ();
 }
 
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return thread_current ()->nice;
 }
 
 /* Returns 100 times the system load average. */
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return fptoi_round (fp_int_mul (load_avg, 100));
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return fptoi_round (fp_int_mul (thread_current ()->recent_cpu, 100));
+}
+
+/* Update recent_cpu for a thread. */
+void
+thread_update_recent_cpu (struct thread *t, void *aux UNUSED)
+{
+  if (t == idle_thread)
+    return;
+  t->recent_cpu = fp_mul (fp_div (fp_int_mul (load_avg, 2),
+                                  fp_add (fp_int_mul (load_avg, 2),
+                                          itofp (1))),
+                          t->recent_cpu);
+  t->recent_cpu = fp_int_add (t->recent_cpu, t->nice);
+}
+
+void
+update_load_avg (void)
+{
+  const fixed_point eff1 = fp_div (itofp (59), itofp (60));
+  const fixed_point eff2 = fp_int_div (itofp(1), 60);
+  int ready_threads_cnt = heap_size (&ready_heap);
+  if (thread_current () != idle_thread)
+    ready_threads_cnt++;
+  load_avg = fp_add (fp_mul (eff1, load_avg),
+                     fp_int_mul (eff2, ready_threads_cnt));
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.

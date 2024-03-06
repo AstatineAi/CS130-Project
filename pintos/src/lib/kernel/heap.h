@@ -38,6 +38,7 @@ struct heap
 
 /* Heap initialization. */
 void heap_init (struct heap *, heap_less_func *);
+void heap_rebuild (struct heap *);
 
 /* Heap elements. */
 heap_elem heap_top (struct heap *);

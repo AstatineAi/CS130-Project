@@ -124,7 +124,10 @@ sema_up (struct semaphore *sema)
     }
   sema->value++;
   intr_set_level (old_level);
-  thread_yield ();
+  if (intr_context ())
+    intr_yield_on_return ();
+  else
+    thread_yield ();
 }
 
 static void sema_test_helper (void *sema_);
@@ -213,6 +216,11 @@ lock_acquire (struct lock *lock)
     {
       cur->lock_waiting = lock;
       donate_priority (cur, 0);
+
+      old_level = intr_disable ();
+      sort_ready_heap ();
+      intr_set_level (old_level);
+
       sema_down (&lock->semaphore);
 
       old_level = intr_disable ();
@@ -265,7 +273,7 @@ lock_release (struct lock *lock)
   list_remove (&lock->elem);
 
   intr_set_level (old_level);
-  thread_update_priority (thread_current ());
+  thread_update_priority (thread_current (), NULL);
   sema_up (&lock->semaphore);
 }
 
@@ -274,6 +282,8 @@ lock_release (struct lock *lock)
 void
 donate_priority (struct thread *t, int dep)
 {
+  if (thread_mlfqs)
+    return;
   ASSERT (t != NULL);
   
   if (dep > DONATE_MAX_DEPTH || t->lock_waiting == NULL)

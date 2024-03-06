@@ -5,6 +5,7 @@
 #include <heap.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/fixed-point.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -97,6 +98,10 @@ struct thread
     int entry_ord;                      /* Entry order (priority FIFO) */
     struct list_elem allelem;           /* List element for all threads list. */
 
+    /* Owned by thread.c, for mlfqs. */
+    int nice;
+    fixed_point recent_cpu;
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
     struct list locks_holding_list;     /* List of acquired locks */
@@ -115,6 +120,7 @@ struct thread
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
+extern fixed_point load_avg;
 
 void thread_init (void);
 void thread_start (void);
@@ -141,7 +147,6 @@ void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
-void thread_update_priority (struct thread *t);
 
 list_less_func cmp_thread_priority;
 
@@ -149,5 +154,10 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+thread_action_func thread_update_priority;
+thread_action_func thread_update_recent_cpu;
+void update_load_avg (void);
+
+void sort_ready_heap (void);
 
 #endif /* threads/thread.h */
