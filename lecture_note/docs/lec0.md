@@ -75,13 +75,10 @@ sudo make install
 
 此时在 `pintos/src/utils` 下 `make`, 只有 warning.
 
-- 把 `pintos/src/utils/pintos` 260 行的 `kernel.bin` 改成 `kernel.bin` 的完整路径 (在 `src/threads/build` 下).
-- 把 `pintos/src/utils/Pintos.pm` 362 行的 `loader.bin` 换成完整路径 (和上面的 `.bin` 在同一个目录)
 - `/src/threads/Make.vars` 7 行 `bochs` 改为 `qemu`
 - `/utils/pintos` 103 行左右 `bochs` 改为 `qemu`
 - `/utils/pintos` 621 行左右: `qemu` 改为 `qemu-system-x86_64`
 
-上面的 "替换为完整路径" 操作均可通过把对应的文件夹添加到 `PATH` 解决.
 
 在 `pintos/src/threads` 下:
 
