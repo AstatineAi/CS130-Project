@@ -285,7 +285,7 @@ nice 只来自外界传入 / 从 parent thread 继承, 修改后更新优先级�
 ### 计算 priority
 
 $$
-priority = PRI_MAX - \dfrac{1}{4} recent_cpu - 2 \cdot nice
+priority = PRI\_MAX - \dfrac{1}{4} recent\_cpu - 2 \cdot nice
 $$
 
 需要控制范围不超过 `PRI_MIN` 到 `PRI_MAX`.
@@ -293,7 +293,7 @@ $$
 ### 计算 recent_cpu
 
 $$
-recent_cpu = \dfrac{2 \cdot load_avg}{2 \cdot load_avg + 1} \cdor recent_cpu + nice
+recent\_cpu = \dfrac{2 \cdot load\_avg}{2 \cdot load\_avg + 1} \cdot recent\_cpu + nice
 $$
 
 ### 计算 load_avg
@@ -301,7 +301,7 @@ $$
 `load_avg` 是全局的, 不是某个线程的属性.
 
 $$
-load_avg = \dfrac{59}{60} load_avg + \dfrac{1}{60} ready_thread
+load\_avg = \dfrac{59}{60} load\_avg + \dfrac{1}{60} ready\_thread
 $$
 
 $ready_thread$ 代表正在运行/就绪的线程数量.
