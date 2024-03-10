@@ -1,7 +1,8 @@
 #!/bin/bash
 
 make clean
-make
+bear -- make
+mv compile_commands.json build/
 cd build/
 pintos-mkdisk filesys.dsk --filesys-size=2
 cd ..
