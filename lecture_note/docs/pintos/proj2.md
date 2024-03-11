@@ -7,7 +7,7 @@
     - Task1 : print termination messages
     - Task2 : argument passing
     - Task3 : system calls
-    - Task4 : deny writes to executables
+    - Task4 :  
 
 ## 分析
 
@@ -30,10 +30,12 @@ msg ("begin");
 msg ("argc = %d", argc);
 for (i = 0; i <= argc; i++)
 if (argv[i] != NULL)
-    msg ("argv[%d] = '%s'", i, argv[i]);
+    msg ("argv[%d] = '%s'", i, argv[i]); // 需要把 arg 分隔开
 else
     msg ("argv[%d] = null", i);
 msg ("end");
+
+return 0; // 我该怎么得到你, 亲爱的返回值?
 ```
 
 主要内容为打印命令行参数, 也就是需要实现为 user program 传参.
@@ -50,4 +52,26 @@ process_wait (tid_t child_tid UNUSED)
 }
 ```
 
-按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果被系统中止/传入的 `tid` 不存在/则返回 `-1`, 否则返回
+按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它则返回 `-1`, 否则返回它的退出情况.
+
+## Task 1
+
+在一个进程退出时输出中止信息 (名称, exit code)
+
+在 `process.c` 内查找发现有一个 `process_exit()`, 用于释放一个进程分配的资源, 这个函数在 `thread_exit()` 被调用, 由于 pintos 的一个进程下没有多线程, 所以直接用该线程的 exit 代表.
+
+于是需要在 `process_exit()` 内加上信息打印.
+
+进程名称来自线程名称, 在 `process_excute()` 内打印, 发现 `file_name` 不仅传入了要运行的文件的名称, 还有运行参数, 是一行完整的指令, 需要手动按空格分离函数名和以空格 (可能多个空格) 分隔开的每个 command line args.
+
+`process_execute()` 内, `palloc_get_page(0)` 获得了 kernel pool 的一个 page, 存储完整的命令, 在 `start_process()` 中 `load()` 加载可执行文件完毕后将其释放, `thread` 中的 `name` 使用 `memcpy` 复制到字符数组, 而 command line args 需要直接压到栈里面, 所以说可以通过在前面分配, 在 `start_process()` 内释放的形式临时保存命令行语句.
+
+这样, 在 `process_execute()` 时直接分割出可执行文件名称, 作为线程名称即可.
+
+你说得对, 但是我返回值呢?
+
+做不了一点, 看下一个 task.
+
+## Task 2
+
+为  user program 传参.

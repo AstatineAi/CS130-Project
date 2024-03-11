@@ -26,22 +26,32 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
-process_execute (const char *file_name) 
+process_execute (const char *command_args) 
 {
-  char *fn_copy;
+  char *ca_copy_1, *ca_copy_2;
   tid_t tid;
 
-  /* Make a copy of FILE_NAME.
-     Otherwise there's a race between the caller and load(). */
-  fn_copy = palloc_get_page (0);
-  if (fn_copy == NULL)
+  char *prog_name, *save_ptr;
+
+  /* Make two copies of COMMAND_ARGS.
+     Otherwise there's a race between the caller and load(). 
+     One copy for executable file name, the other for args. */
+  ca_copy_1 = palloc_get_page (0);
+  ca_copy_2 = palloc_get_page (0);
+  if (ca_copy_1 == NULL || ca_copy_2 == NULL)
     return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
+  strlcpy (ca_copy_1, command_args, PGSIZE);
+  strlcpy (ca_copy_2, command_args, PGSIZE);
+  prog_name = strtok_r (ca_copy_1, " ", &save_ptr);
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (prog_name, PRI_DEFAULT, start_process, ca_copy_2);
+  printf ("NONONONO\n");
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+    {
+      palloc_free_page (ca_copy_1); 
+      palloc_free_page (ca_copy_2); 
+    }
   return tid;
 }
 
@@ -51,6 +61,9 @@ static void
 start_process (void *file_name_)
 {
   char *file_name = file_name_;
+
+  printf ("file name : %s\n", file_name);
+
   struct intr_frame if_;
   bool success;
 
@@ -59,12 +72,17 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
+
+  printf ("you should load\n");
+
   success = load (file_name, &if_.eip, &if_.esp);
 
+  printf ("start loading\n");
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
+  printf ("end loading\n");
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -114,6 +132,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  int not_implemented = 0;
+  printf ("%s: exit(%d)\n", cur->name, not_implemented);
 }
 
 /* Sets up the CPU for running user code in the current
