@@ -101,7 +101,7 @@ sub parse_command_line {
 	  or exit 1;
     }
 
-    $sim = "qemu" if !defined $sim;
+    $sim = "bochs" if !defined $sim;
     $debug = "none" if !defined $debug;
     $vga = exists ($ENV{DISPLAY}) ? "window" : "none" if !defined $vga;
 
@@ -624,7 +624,7 @@ sub run_qemu {
       if $vga eq 'terminal';
     print "warning: qemu doesn't support jitter\n"
       if defined $jitter;
-    my (@cmd) = ('qemu-system-x86_64');
+    my (@cmd) = ('qemu-system-i386');
     push (@cmd, '-device', 'isa-debug-exit');
 
     my ($i);

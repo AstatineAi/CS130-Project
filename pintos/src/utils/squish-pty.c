@@ -285,7 +285,6 @@ main (int argc __attribute__ ((unused)), char *argv[])
 
   /* System V implementations need STREAMS configuration for the
      slave. */
-  /*
   if (isastream (slave))
     {
       if (ioctl (slave, I_PUSH, "ptem") < 0
@@ -293,7 +292,6 @@ main (int argc __attribute__ ((unused)), char *argv[])
         fail_io ("ioctl");
     }
 
-   */
   /* Arrange to get notified when a child dies, by writing a byte
      to a pipe fd.  We really want to use pselect() and
      sigprocmask(), but Solaris 2.7 doesn't have it. */

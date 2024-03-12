@@ -38,52 +38,50 @@ process_execute (const char *command_args)
      One copy for executable file name, the other for args. */
   ca_copy_1 = palloc_get_page (0);
   ca_copy_2 = palloc_get_page (0);
-  if (ca_copy_1 == NULL || ca_copy_2 == NULL)
-    {
-      palloc_free_page(ca_copy_1);
-      palloc_free_page(ca_copy_2);
-      return TID_ERROR;
-    }
+  if (ca_copy_1 == NULL || ca_copy_2 == NULL) {
+    palloc_free_page (ca_copy_1); 
+    palloc_free_page (ca_copy_2);
+    return TID_ERROR;
+  }
   strlcpy (ca_copy_1, command_args, PGSIZE);
   strlcpy (ca_copy_2, command_args, PGSIZE);
   prog_name = strtok_r (ca_copy_1, " ", &save_ptr);
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (prog_name, PRI_DEFAULT, start_process, ca_copy_2);
-  printf ("process_exec prog_name %s\ntid: %d\n", prog_name, tid);
+
+  printf ("\n\nsucessfully loaded\n\n");
+
   if (tid == TID_ERROR)
     palloc_free_page (ca_copy_2); 
-  palloc_free_page (ca_copy_1); 
+  palloc_free_page (ca_copy_1);
   return tid;
 }
 
 /* A thread function that loads a user process and starts it
    running. */
 static void
-start_process (void *command_args_)
+start_process (void *file_name_)
 {
-  char *command_args = command_args_;
-  char *prog_name, *save_ptr;
+  char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
 
-  prog_name = strtok_r (command_args, " ", &save_ptr);
+  char *save_ptr, *prog_name;
+
+  prog_name = strtok_r(file_name, " ", &save_ptr);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-
   success = load (prog_name, &if_.eip, &if_.esp);
-  printf ("\n\nend loading.\n\n");
 
   /* If load failed, quit. */
-  palloc_free_page (command_args_);
+  palloc_free_page (file_name_);
   if (!success) 
     thread_exit ();
-
-  printf ("\n\nsuccess.\n\n");
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -133,8 +131,6 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  int not_implemented = 0;
-  printf ("%s: exit(%d)\n", cur->name, not_implemented);
 }
 
 /* Sets up the CPU for running user code in the current
@@ -249,7 +245,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-  printf ("\n\n\n\nload done: %s\n\n\n\n", file_name);
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr

@@ -36,7 +36,7 @@ for patchfile in "$SRCDIR/bochs-$V"-*.patch; do
     patch -p1 -i "$patchfile"
 done
 
-CFGOPTS="--with-x --with-x11 --with-term --with-nogui"
+CFGOPTS="--with-term --with-nogui"
 mkdir plain
 (cd plain &&
         ../configure $CFGOPTS --prefix="$PREFIX" --enable-gdb-stub &&
