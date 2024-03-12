@@ -50,8 +50,6 @@ process_execute (const char *command_args)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (prog_name, PRI_DEFAULT, start_process, ca_copy_2);
 
-  printf ("\n\nsucessfully loaded\n\n");
-
   if (tid == TID_ERROR)
     palloc_free_page (ca_copy_2); 
   palloc_free_page (ca_copy_1);
@@ -131,6 +129,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  int not_implemented = -114514;
+  printf ("%s: exit(%d)\n", cur->name, not_implemented);
 }
 
 /* Sets up the CPU for running user code in the current

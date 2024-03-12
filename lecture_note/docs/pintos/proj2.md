@@ -3,6 +3,9 @@
 !!! warning "No plagiarism"
     If you are enrolled in CS130, you may not copy code from this repository.
 
+!!! warning "急了急了急了"
+    强烈建议从未修改的框架代码版本开始写 Project 2, 由于 Project 1 涉及到对 `thread`, `semaphore`, `lock` 等的修改, 可能在 Project 2 导致未知错误.
+
 !!! note "Overview"
     - Task1 : print termination messages
     - Task2 : argument passing
@@ -54,6 +57,12 @@ process_wait (tid_t child_tid UNUSED)
 
 按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它则返回 `-1`, 否则返回它的退出情况.
 
+## 文件系统限制
+
+- 可能并发访问一个文件, 考虑加锁
+- 文件大小固定, 控制文件名长度不超过 14 字符
+- 没有虚拟内存, 文件必须占用连续的物理内存, 合理分配和回收
+
 ## Task 1
 
 在一个进程退出时输出中止信息 (名称, exit code)
@@ -75,3 +84,5 @@ process_wait (tid_t child_tid UNUSED)
 ## Task 2
 
 为  user program 传参.
+
+
