@@ -2,9 +2,11 @@
 #include <debug.h>
 #include <inttypes.h>
 #include <round.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "stddef.h"
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
@@ -38,11 +40,12 @@ process_execute (const char *command_args)
      One copy for executable file name, the other for args. */
   ca_copy_1 = palloc_get_page (0);
   ca_copy_2 = palloc_get_page (0);
-  if (ca_copy_1 == NULL || ca_copy_2 == NULL) {
-    palloc_free_page (ca_copy_1); 
-    palloc_free_page (ca_copy_2);
-    return TID_ERROR;
-  }
+  if (ca_copy_1 == NULL || ca_copy_2 == NULL) 
+    {
+      palloc_free_page (ca_copy_1); 
+      palloc_free_page (ca_copy_2);
+      return TID_ERROR;
+    }
   strlcpy (ca_copy_1, command_args, PGSIZE);
   strlcpy (ca_copy_2, command_args, PGSIZE);
   prog_name = strtok_r (ca_copy_1, " ", &save_ptr);
@@ -76,8 +79,48 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (prog_name, &if_.eip, &if_.esp);
 
+  /* Get all tokens and push. */
+  int argc = 0;
+  char **argv = palloc_get_page(0), *token;
+  if (argv == NULL)
+    thread_exit();
+  
+  if_.esp -= strlen(prog_name) + 1;
+  memcpy(if_.esp, prog_name, strlen(prog_name) + 1);
+  argv[argc++] = if_.esp;
+
+  for (token = strtok_r(NULL, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr)) 
+    {
+      if_.esp -= strlen(token) + 1;
+      memcpy(if_.esp, token, strlen(token) + 1);
+      argv[argc++] = if_.esp;
+    }
+
+  /* Word-align. */
+  if_.esp = (void *)((uintptr_t)if_.esp & 0xfffffffc);
+
+  /* Push argv[] pointers to the stack. */
+  argv[argc] = NULL;
+  for (int i = argc; i >= 0; i--) {
+      if_.esp -= sizeof(char *);
+      memcpy(if_.esp, &argv[i], sizeof(char *));
+  }
+
+  /* Push argv and argc to the stack. */
+  char **argv_addr = if_.esp;
+  if_.esp -= sizeof(char **);
+  memcpy(if_.esp, &argv_addr, sizeof(char **));
+  if_.esp -= sizeof(int);
+  memcpy(if_.esp, &argc, sizeof(int));
+
+  /* Push return address. */
+  if_.esp -= sizeof(void *);
+  memset(if_.esp, 0, sizeof (void *));
+  
   /* If load failed, quit. */
   palloc_free_page (file_name_);
+  palloc_free_page (argv);
   if (!success) 
     thread_exit ();
 
@@ -103,7 +146,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+  while (1);
 }
 
 /* Free the current process's resources. */

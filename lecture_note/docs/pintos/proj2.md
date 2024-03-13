@@ -85,4 +85,60 @@ process_wait (tid_t child_tid UNUSED)
 
 为  user program 传参.
 
+首先为了让 progress 跑起来, 把 `progress_wait()` 改成 `while(1)` 死循环, 防止被终止, 以后再实现正常的 wait.
 
+看完文档的例子:
+			
+| Address   | Name        | Data      | Type    |
+|-----------|-------------|-----------|---------|
+| 0xbfffffc | argv[3][...] | bar\0     | char[4] |
+| 0xbfffff8 | argv[2][...] | foo\0     | char[4] |
+| 0xbfffff5 | argv[1][...] | -l\0      | char[3] |
+| 0xbffffed | argv[0][...] | /bin/ls\0 | char[8] |
+| 0xbffffec | word-align   | 0         | uint8_t |
+| 0xbffffe8 | argv[4]      | 0         | char *  |
+| 0xbffffe4 | argv[3]      | 0xbfffffc | char *  |
+| 0xbffffe0 | argv[2]      | 0xbfffff8 | char *  |
+| 0xbffffdc | argv[1]      | 0xbfffff5 | char *  |
+| 0xbffffd8 | argv[0]      | 0xbffffed | char *  |
+| 0xbffffd4 | argv         | 0xbffffd8 | char ** |
+| 0xbffffd0 | argc         | 4         | int     |
+| 0xbffffcc | return address | 0       | void (*)() |
+
+指针最开始在 `PHYS_BASE` 的位置, 首先堆入每个 `argv` 的串的内容, 堆的时候指针向地址较小的方向移动, 保证每个串在内存上顺序, 且包含代表字符串结束的 `\0`, 串之间顺序无所谓, 保存地址指针.
+
+然后进行对齐.
+
+然后把 `argv[i]` 的地址, 以及 `argv` 的地址压入栈, 最后压入 `argc` 和 `return address`.
+
+此时传参结束, 汇编跳转后调用
+
+```c
+void
+_start (int argc, char *argv[])
+{
+  exit (main (argc, argv));
+}
+```
+
+开始运行 user program. 此时会调用 `syscall`, 进入 `syscall_handler` 环节.
+
+## Task 3
+
+实现 `read` 和 `write` 两种 system call, 实现用户访问内存并且应对各种 corner case.
+
+被 Task 4 覆盖, 先看 4.
+
+## Task 4
+
+实现 13 种 system call.
+
+首先查看 handler 如何处理 system call.
+
+`syscall_init()` 保证了在程序使用 `int 0x30` 时调用 `syscall_handler()`, 查看 `src/lib/user/syscall.c` 宏, 使用汇编进行压栈, handler 需要从 `intr_frame` 获取信息.
+
+### 确定调用种类
+
+宏有 `syscall0`, `syscall1`, `syscall2`, `syscall3` 四种
+
+### halt
