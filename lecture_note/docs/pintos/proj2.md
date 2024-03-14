@@ -55,7 +55,7 @@ process_wait (tid_t child_tid UNUSED)
 }
 ```
 
-按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它则返回 `-1`, 否则返回它的退出情况.
+按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果 _那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它_ 则返回 `-1`, 否则返回它通过 `exit` 传递的返回值.
 
 ## 文件系统限制
 
@@ -79,7 +79,7 @@ process_wait (tid_t child_tid UNUSED)
 
 你说得对, 但是我返回值呢?
 
-做不了一点, 看下一个 task.
+做不了一点, 看下一个 task
 
 ## Task 2
 
@@ -125,20 +125,37 @@ _start (int argc, char *argv[])
 
 ## Task 3
 
-实现 `read` 和 `write` 两种 system call, 实现用户访问内存并且应对各种 corner case.
-
-被 Task 4 覆盖, 先看 4.
-
-## Task 4
-
 实现 13 种 system call.
+
+system call 属于内部中断, 和之前的 timer interrupt 等 CPU 外设备造成的中断不同.
 
 首先查看 handler 如何处理 system call.
 
-`syscall_init()` 保证了在程序使用 `int 0x30` 时调用 `syscall_handler()`, 查看 `src/lib/user/syscall.c` 宏, 使用汇编进行压栈, handler 需要从 `intr_frame` 获取信息.
+`syscall_init()` 保证了在程序使用 `int 0x30` 中断时调用 `syscall_handler()`, 查看 `src/lib/user/syscall.c` 宏, 使用汇编进行压栈, handler 需要从 `intr_frame` 获取信息.
 
 ### 确定调用种类
 
-宏有 `syscall0`, `syscall1`, `syscall2`, `syscall3` 四种
+宏有 `syscall0`, `syscall1`, `syscall2`, `syscall3` 四种, 压栈 syscall 类型和参数, 则可以从 `esp` 指针获取 system call 类型, 然后再向高地址移动 `esp` 获取后面的参数.
+
+`syscall_id = *(int *)f->esp;`
 
 ### halt
+
+无参数, 直接关机.
+
+### exit
+
+一个参数, 为 user program 返回值.
+
+## 回到 Task 1
+
+重新审视进程退出的行为, 在内核层面-用户层面分别考虑.
+
+### 用户层面
+
+
+
+## Task 4
+
+拒绝用户写入可执行文件.
+

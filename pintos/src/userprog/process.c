@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "list.h"
 #include "stddef.h"
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
@@ -17,6 +18,7 @@
 #include "threads/init.h"
 #include "threads/interrupt.h"
 #include "threads/palloc.h"
+#include "threads/synch.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
@@ -28,14 +30,14 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
-process_execute (const char *command_args) 
+process_execute (const char *cmd_args) 
 {
   char *ca_copy_1, *ca_copy_2;
   tid_t tid;
 
   char *prog_name, *save_ptr;
 
-  /* Make two copies of COMMAND_ARGS.
+  /* Make two copies of cmd_args.
      Otherwise there's a race between the caller and load(). 
      One copy for executable file name, the other for args. */
   ca_copy_1 = palloc_get_page (0);
@@ -46,8 +48,8 @@ process_execute (const char *command_args)
       palloc_free_page (ca_copy_2);
       return TID_ERROR;
     }
-  strlcpy (ca_copy_1, command_args, PGSIZE);
-  strlcpy (ca_copy_2, command_args, PGSIZE);
+  strlcpy (ca_copy_1, cmd_args, PGSIZE);
+  strlcpy (ca_copy_2, cmd_args, PGSIZE);
   prog_name = strtok_r (ca_copy_1, " ", &save_ptr);
 
   /* Create a new thread to execute FILE_NAME. */
@@ -144,9 +146,28 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  while (1);
+  if (child_tid == TID_ERROR)
+    return -1;
+  struct thread *cur = thread_current ();
+  struct thread *child = NULL;
+  struct list_elem *elem;
+  for (elem = list_begin(&cur->child_list);
+       elem != list_end(&cur->child_list);
+       elem = list_next(elem))
+    {
+      struct thread *t = list_entry(elem, struct thread, child_elem);
+      if (t->tid == child_tid)
+        {
+          child = t;
+          break;
+        }
+    }
+  if (child == NULL)
+    return -1;
+  sema_down (&cur->child_sema);
+  return child->return_status;
 }
 
 /* Free the current process's resources. */
@@ -172,8 +193,7 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  int not_implemented = -114514;
-  printf ("%s: exit(%d)\n", cur->name, not_implemented);
+  sema_up(&cur->parent->child_sema);
 }
 
 /* Sets up the CPU for running user code in the current
