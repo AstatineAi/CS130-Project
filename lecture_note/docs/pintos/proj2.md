@@ -3,11 +3,14 @@
 !!! warning "No plagiarism"
     If you are enrolled in CS130, you may not copy code from this repository.
 
+!!! warning "急了急了急了"
+    强烈建议从未修改的框架代码版本开始写 Project 2, 由于 Project 1 涉及到对 `thread`, `semaphore`, `lock` 等的修改, 可能在 Project 2 导致未知错误.
+
 !!! note "Overview"
     - Task1 : print termination messages
     - Task2 : argument passing
     - Task3 : system calls
-    - Task4 :  
+    - Task4 : deny writes to executables
 
 ## 分析
 
@@ -52,7 +55,13 @@ process_wait (tid_t child_tid UNUSED)
 }
 ```
 
-按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它则返回 `-1`, 否则返回它的退出情况.
+按照注释里的内容, 这个函数作用是等待编号 `child_tid` 线程的运行结果, 如果 _那个线程被系统中止/传入的 `tid` 不存在/传入的 `tid` 代表的进程不是目前线程的子进程/这个线程已经有一个 `process_wait()` 在等待它_ 则返回 `-1`, 否则返回它通过 `exit` 传递的返回值.
+
+## 文件系统限制
+
+- 可能并发访问一个文件, 考虑加锁
+- 文件大小固定, 控制文件名长度不超过 14 字符
+- 没有虚拟内存, 文件必须占用连续的物理内存, 合理分配和回收
 
 ## Task 1
 
@@ -70,8 +79,83 @@ process_wait (tid_t child_tid UNUSED)
 
 你说得对, 但是我返回值呢?
 
-做不了一点, 看下一个 task.
+做不了一点, 看下一个 task
 
 ## Task 2
 
 为  user program 传参.
+
+首先为了让 progress 跑起来, 把 `progress_wait()` 改成 `while(1)` 死循环, 防止被终止, 以后再实现正常的 wait.
+
+看完文档的例子:
+			
+| Address   | Name        | Data      | Type    |
+|-----------|-------------|-----------|---------|
+| 0xbfffffc | argv[3][...] | bar\0     | char[4] |
+| 0xbfffff8 | argv[2][...] | foo\0     | char[4] |
+| 0xbfffff5 | argv[1][...] | -l\0      | char[3] |
+| 0xbffffed | argv[0][...] | /bin/ls\0 | char[8] |
+| 0xbffffec | word-align   | 0         | uint8_t |
+| 0xbffffe8 | argv[4]      | 0         | char *  |
+| 0xbffffe4 | argv[3]      | 0xbfffffc | char *  |
+| 0xbffffe0 | argv[2]      | 0xbfffff8 | char *  |
+| 0xbffffdc | argv[1]      | 0xbfffff5 | char *  |
+| 0xbffffd8 | argv[0]      | 0xbffffed | char *  |
+| 0xbffffd4 | argv         | 0xbffffd8 | char ** |
+| 0xbffffd0 | argc         | 4         | int     |
+| 0xbffffcc | return address | 0       | void (*)() |
+
+指针最开始在 `PHYS_BASE` 的位置, 首先堆入每个 `argv` 的串的内容, 堆的时候指针向地址较小的方向移动, 保证每个串在内存上顺序, 且包含代表字符串结束的 `\0`, 串之间顺序无所谓, 保存地址指针.
+
+然后进行对齐.
+
+然后把 `argv[i]` 的地址, 以及 `argv` 的地址压入栈, 最后压入 `argc` 和 `return address`.
+
+此时传参结束, 汇编跳转后调用
+
+```c
+void
+_start (int argc, char *argv[])
+{
+  exit (main (argc, argv));
+}
+```
+
+开始运行 user program. 此时会调用 `syscall`, 进入 `syscall_handler` 环节.
+
+## Task 3
+
+实现 13 种 system call.
+
+system call 属于内部中断, 和之前的 timer interrupt 等 CPU 外设备造成的中断不同.
+
+首先查看 handler 如何处理 system call.
+
+`syscall_init()` 保证了在程序使用 `int 0x30` 中断时调用 `syscall_handler()`, 查看 `src/lib/user/syscall.c` 宏, 使用汇编进行压栈, handler 需要从 `intr_frame` 获取信息.
+
+### 确定调用种类
+
+宏有 `syscall0`, `syscall1`, `syscall2`, `syscall3` 四种, 压栈 syscall 类型和参数, 则可以从 `esp` 指针获取 system call 类型, 然后再向高地址移动 `esp` 获取后面的参数.
+
+`syscall_id = *(int *)f->esp;`
+
+### halt
+
+无参数, 直接关机.
+
+### exit
+
+一个参数, 为 user program 返回值.
+
+## 回到 Task 1
+
+重新审视进程退出的行为, 在内核层面-用户层面分别考虑.
+
+### 用户层面
+
+
+
+## Task 4
+
+拒绝用户写入可执行文件.
+
