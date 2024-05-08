@@ -6,9 +6,12 @@
 #include "filesys/free-map.h"
 #include "filesys/inode.h"
 #include "filesys/directory.h"
+#include "threads/synch.h"
 
 /* Partition that contains the file system. */
 struct block *fs_device;
+
+struct lock filesys_lock;
 
 static void do_format (void);
 
@@ -28,6 +31,8 @@ filesys_init (bool format)
     do_format ();
 
   free_map_open ();
+
+  lock_init(&filesys_lock);
 }
 
 /* Shuts down the file system module, writing any unwritten data

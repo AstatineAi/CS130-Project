@@ -4,7 +4,8 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-#include "threads/synch.h"
+
+#include "synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -13,6 +14,14 @@ enum thread_status
     THREAD_READY,       /* Not running but ready to run. */
     THREAD_BLOCKED,     /* Waiting for an event to trigger. */
     THREAD_DYING        /* About to be destroyed. */
+  };
+
+/* States in loading executable files. */
+enum load_status
+  {
+    LOAD_INIT,      /* Loading. */
+    LOAD_SUCCESS,   /* Successfully loaded. */
+    LOAD_FAIL       /* Load failed. (will cause exit -1) */
   };
 
 /* Thread identifier type.
@@ -97,17 +106,38 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-    struct thread *parent;              /* Parent process. */
-    struct list_elem child_elem;        /* List element for parent processes. */
-    struct list child_list;             /* List of child processes. */
-    
-    struct semaphore child_sema;        /* Semaphore for child process. */
-    bool waited;                        /* Whether parent process has waited this process. */
-    int return_status;                  /* Return status. */
+    int exit_code;                      /* Process exit code (for precess_wait) */
+
+    tid_t parent_tid;                   /* Parent thread id. */
+    struct list child_list;             /* List of child precesses. */
+
+    struct file *exec_file;             /* The executable file this thread loaded from */
+    struct list fd_list;                /* List of descriptors of opened files. */
+    int fd_cnt;                         /* Allocate file descriptor. */
+
+    struct semaphore load_sema;         /* Semaphore for loading executable */
+    enum load_status load_state;        /* State if loading success */
 #endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+  };
+
+struct child_status
+  {
+    tid_t tid;                          /* Child tid */
+    int exit_code;                      /* Child exit status */
+    bool is_waited;                     /* Whether this process is waited */
+    struct semaphore wait_sema;         /* Semaphore for process_wait */
+
+    struct list_elem child_elem;        /* List element of child_list */
+  };
+
+struct file_descriptor
+  {
+    int fd;
+    struct file *file;
+    struct list_elem elem;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -133,6 +163,8 @@ const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
+
+struct thread *thread_get_by_tid (tid_t);
 
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);

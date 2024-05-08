@@ -182,6 +182,10 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+#ifdef USERPROG
+  if (function == start_process)
+    t->parent_tid = thread_current()->tid;
+#endif //USERPROG
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -464,6 +468,16 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+#ifdef USERPROG
+  t->exit_code = 0;
+  list_init (&t->child_list);
+  list_init (&t->fd_list);
+  t->fd_cnt = 2;
+  t->exec_file = NULL;
+  sema_init(&t->load_sema, 0);
+  t->load_state = LOAD_INIT;
+#endif
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
@@ -578,6 +592,28 @@ allocate_tid (void)
 
   return tid;
 }
+
+/* Get thread by tid. */
+struct thread *
+thread_get_by_tid (tid_t tid)
+{
+  struct list_elem *e;
+  struct thread *t = NULL;
+  enum intr_level old_level = intr_disable();
+
+  for (e = list_begin (&all_list); e != list_end (&all_list);
+       e = list_next (e))
+    {
+      t = list_entry (e, struct thread, allelem);
+      if (t->tid == tid && t->status != THREAD_DYING)
+        break;
+    }
+  
+  intr_set_level(old_level);
+
+  return t;
+}
+
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
