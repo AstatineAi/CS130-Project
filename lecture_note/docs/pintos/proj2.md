@@ -12,6 +12,10 @@
     - Task3 : system calls
     - Task4 : deny writes to executables
 
+## 调试
+
+为了将可执行文件写入 pintos 的虚拟硬盘, 需要添加参数 `-p tests/userprog/filename -a filename`, 每个文件增加一组上述形式的参数.
+
 ## 分析
 
 在 `tests/userprog/Make.tests` 内有此 project 的自测数据点.
@@ -59,7 +63,7 @@ process_wait (tid_t child_tid UNUSED)
 
 ## 文件系统限制
 
-- 可能并发访问一个文件, 考虑加锁
+- 可能并发访问文件, 考虑加锁
 - 文件大小固定, 控制文件名长度不超过 14 字符
 - 没有虚拟内存, 文件必须占用连续的物理内存, 合理分配和回收
 
@@ -147,13 +151,13 @@ system call 属于内部中断, 和之前的 timer interrupt 等 CPU 外设备�
 
 一个参数, 为 user program 返回值.
 
-## 回到 Task 1
+问题: 进程在被 wait 之前调用 exit
 
-重新审视进程退出的行为, 在内核层面-用户层面分别考虑.
+需要适当保存一个进程所有子进程的 exit status. 如果将 exit status 保存在 `struct thread` 里面, 在 `thread_exit()` 时, 会释放这个结构, 无法保存 exit status.
 
-### 用户层面
+考虑使用 `thread/malloc` 内实现的 `malloc()`, 这个函数在 kernel pool 内分配内存, 保证了父进程, 子进程都可以在内核态访问到, 且在进程终结时不会被立即释放, 可以等待父进程去释放.
 
-
+在分配内容较少时, 避免使用 `palloc_get_page(0)`
 
 ## Task 4
 
