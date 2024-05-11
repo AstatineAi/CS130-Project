@@ -2,9 +2,10 @@
 
 !!! warning "No plagiarism"
     If you are enrolled in CS130, you may not copy code from this repository.
+    Project 3 强调设计, 具体实现因人而异.
 
 !!! warning "急了急了急了"
-    Project 3 基于 Project 2, 希望你的 Project 2 足够 robust.
+    Project 3 基于 Project 2, 希望你的 Project 2 足够 robust 且有合适的非法地址检测.
 
 !!! note "Overview"
     - Task 1 : paging
@@ -83,6 +84,10 @@
 
 这个 page directory 确定了 kernel virtual memory 到 physical memory 的映射, 内核的 virtual memmory 范围为 `PHYS_BASE` 到 `0xFFFFFFFF` (4 GB), 且内核 virtual memory 和 physical memory 映射关系固定为 `vaddr = paddr + PHYS_BASE`.
 
+由于 CPU 必须读取 page table 的物理地址, 但 x86 没有提供直接读写物理地址的指令, 所以需要 kernel virtual memory 的这种线性映射关系, 以实现修改 page directory / page table 的目的.
+
+在 kernel 的 1 GB 内存中, 还保存了 page 分配的信息 (bitmap), 以此实现了 palloc get/free 的功能.
+
 现在的 virtual memory 布局如下:
 
 ```
@@ -97,7 +102,7 @@
              |                 V                |
              |          grows downward          |
              |                                  |
-             |                                  |
+             |         LOL, no heap memory      |
              |                                  |
              |                                  |
              |           grows upward           |
@@ -182,7 +187,7 @@ Pintos 页大小为 4096 字节, 低位 12 位用于描述 offset, 则前 20 位
 
 ### `palloc_get_page (PAL_USER)` 在干什么
 
-我们可以认为 `palloc_get_page (PAL_USER)` 是在分配一个 frame, 在 physical memory 的比 kernel 映射到的更高位的地址获得了一个 frame, 不过需要 `install_page` 将这个 frame 写入 page dir & page table 和 virtual address 建立映射关系.
+我们可以认为 `palloc_get_page (PAL_USER)` 是在分配一个 frame, 在 physical memory 的比 kernel 映射到的更高位的地址获得了一个 frame, 不过需要 `install_page` 将这个 frame 写入 page dir & page table 和 virtual address 建立映射关系. (如果是 `palloc_get_page (0)`, 那么映射关系已经在 `init_page_dir` 里面建立好了, 直接按返回的指针使用即可)
 
 也就是说, user program 认为高地址是栈区, 低地址是全局区, 但是实际上这些地址都是虚拟地址, 不一定真的在物理内存的高/低地址.
 
@@ -218,7 +223,7 @@ Pintos 的内存结构决定了我们需要管理的部分为加载可执行文�
 
 ```c
 struct frame_or_whatever {
-    void *vaddr; // virtual address
+    void *kaddr;
 };
 ```
 
@@ -230,25 +235,64 @@ struct frame_or_whatever {
 
 ```c
 struct frame_or_whatever {
-    void *vaddr; // virtual address 
+    void *kaddr;
     struct lock frame_lock;
 };
 ```
 
+> To simplify your design, you may store these data structures in non-pageable memory. That means that you can be sure that pointers among them will remain valid.
 
+这里的 non-pageable memory 指的是 kernel pool, 也就是说最好在 kernel pool 里面分配 frame.
 
-## Task 2
+如果改成加上 ref count, 可以实现共享 frame (想了一下, 好难).
 
+```c
+struct frame_table_entry {
+    void *kaddr;                        // Kernel address
+    struct sup_page_table_entry *spte;  // Supplementary page table entry
+    struct thread* owner;               // Owner of the frame
+    struct list_elem elem;              // List element for list of all frames
+};
+```
 
+然后需要实现 supplmentary page table, 用于记录 page 的信息, 以及记录 page 的状态.
 
-## Task 3
+```c
+struct sup_page_table_entry {
+    void *user_vaddr;       // User virtual address
 
+    bool is_loaded;         // Is page loaded
+    bool writable;          // Is page writable
 
+    struct file *file;      // File to load page from
+    off_t offset;           // Offset in file
+    uint32_t read_bytes;    // Number of bytes to read
+    uint32_t zero_bytes;    // Number of bytes to zero
 
-## Task 4
+    struct hash_elem elem;  // Hash element for supplementary page table
 
+    bool accessed;          // Is page accessed
+    bool dirty;             // Is page dirty
+    size_t swap_index;      // Swap index
+};
+```
 
+还需要实现 swap, 使用 device/block.h 里面的 block device, 用于读写 swap slot.
 
-## Task 5
+## Task 2: Stack growth
 
+在最开始分配一个 page 作为栈, 后续考虑栈增长的情况. 按照 80x86 PUSHA 最多在 esp 低 32 字节的位置引发 page fault, 考虑将 32 字节作为分界, 低于 32 字节时分配新的 page, 否则视为非法访问.
 
+栈增长锁分配的 frame 也可能被 swap out, 此时总是需要保存 frame 的内容, 以便在需要时载入.
+
+可以限制一个进程最大栈区大小, 以防止无限增长.
+
+## Task 3: Memory mapping files
+
+mmap 会将文件映射到连续的页.
+
+mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.
+
+## Task 4: Accessing user memory
+
+需要保证在进入内核时, 用户内存是合法的, 且需要避免一些持有资源情况下遇到 page fault, 对 supplmentary page table 加入
