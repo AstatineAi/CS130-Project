@@ -27,11 +27,103 @@
 
 ### 什么是 virtual address
 
-Pintos 的虚拟内存分为 user virtual memory 和 kernel virtual memory, 内核内存全局共享, 在 project 2 使用的 `thread/malloc` 里面实现的 `malloc/free` 和 `palloc_get_page (0)` 都是从此部分内存中分配.
+对 virtual address 的支持是从 bare metal 开始的 (到达硬件 (相对来说比较) 底层! 太美丽了 CPU, 哎呀这不 DRAM 吗, 还是看看远处的一生一芯吧家人们), 回看 pintos 的启动过程, `start.S` 里面的汇编最开始直接访问的是物理地址, 但是在启动过程中 `movl %eax, %cr3` 设置了 CR3 寄存器, 即在进入保护模式之后, 一切 "按照地址访问" 实际上都是访问虚拟地址.
 
-用户的 virtual address 范围为 `0` 到 `PHYS_BASE` (0xc0000000, 3 GB), 内核的 vritual address 范围为 `PHYS_BASE` 到 4 GB, 且内核 virtual memory 和 physical memory 映射关系固定为 `vaddr = paddr + PHYS_BASE`
+```
++------------------+  <- 0xFFFFFFFF (4GB)
+|      32-bit      |
+|  memory mapped   |
+|     devices      |
+|                  |
+/\/\/\/\/\/\/\/\/\/\
+/\/\/\/\/\/\/\/\/\/\
+|                  |
+|      Unused      |
+|                  |
++------------------+  <- depends on amount of RAM
+|                  |
+|                  |
+| Extended Memory  |
+|                  |
+|                  |
++------------------+  <- 0x00100000 (1MB)
+|     BIOS ROM     |
++------------------+  <- 0x000F0000 (960KB)
+|  16-bit devices, |
+|  expansion ROMs  |
++------------------+  <- 0x000C0000 (768KB)
+|   VGA Display    |
++------------------+  <- 0x000A0000 (640KB)
+|  pintos kernel   |
++------------------+  <- 0x00020000 (128KB)
+|  page tables     |
+|  for startup     |
++------------------+  <- 0x00010000 (64KB)
+|  page directory  |
+|  for startup     |
++------------------+  <- 0x0000f000 (60KB)
+|  initial kernel  |
+|   thread struct  |
++------------------+  <- 0x0000e000 (56KB)
+|        /         |
++------------------+  <- 0x00007e00 (31.5KB)
+|   pintos loader  |
++------------------+  <- 0x00007c00 (31KB)
+|        /         |
++------------------+  <- 0x00000600 (1536B)
+|     BIOS data    |
++------------------+  <- 0x00000400 (1024B)
+|     CPU-owned    |
++------------------+  <- 0x00000000
+```
 
-在 `userprog/pagedir.c pagedir_activate()` 通过内联汇编修改 `CR3` 寄存器 (若该进程未设置 page directory, 则使用只映射了 kernel pool 的 `init_page_dir`), 更改 CPU 查找虚拟内存时使用的 page directory, 来实现切换线程时的内存切换.
+除了上面这张图的 "0x....." 是确实在硬件里面的地址, 其他都是虚拟地址 (进入保护模式了).
+
+然后这层地址是 start.S 创造的只映射了几 MB 的 page directory 的状态, 在高级初始化过程中, `paging_init ()` 函数初始化了更完整的 page directory (`init_page_dir`), 然后修改 CR3 寄存器, 使得 CPU 从此开始使用新的 page directory.
+
+这个 page directory 确定了 kernel virtual memory 到 physical memory 的映射, 内核的 virtual memmory 范围为 `PHYS_BASE` 到 `0xFFFFFFFF` (4 GB), 且内核 virtual memory 和 physical memory 映射关系固定为 `vaddr = paddr + PHYS_BASE`.
+
+现在的 virtual memory 布局如下:
+
+```
+   (4 GB)    +----------------------------------+
+             |                                  |
+             |       kernel virtual memory      |
+             |                                  |
+   PHYS_BASE +----------------------------------+
+             |            user stack            |
+             |                 |                |
+             |                 |                |
+             |                 V                |
+             |          grows downward          |
+             |                                  |
+             |                                  |
+             |                                  |
+             |                                  |
+             |           grows upward           |
+             |                 ^                |
+             |                 |                |
+             |                 |                |
+             +----------------------------------+
+             | uninitialized data segment (BSS) |
+             +----------------------------------+
+             |     initialized data segment     |
+             +----------------------------------+
+             |           code segment           |
+  0x08048000 +----------------------------------+
+             |                                  |
+             |                                  |
+             |                                   |
+             |                                  |
+             |                                  |
+           0 +----------------------------------+
+```
+
+内核内存全局共享, 在 project 2 使用的 `thread/malloc.c` 里面实现的 `malloc()`, `free()` 和 `palloc_get_page (0)` 都是从此部分内存中分配.
+
+在 `userprog/pagedir.c pagedir_activate()` 通过内联汇编修改 `CR3` 寄存器 (若该进程未设置 page directory, 则使用只映射了 kernel virtual memory 的 `init_page_dir`), 更改 CPU 查找虚拟内存时使用的 page directory, 来实现切换线程时的内存切换.
+
+所有的新的 page directory 都是在 `init_page_dir` 基础上加入了用户内存的映射, 保证可以访问内核内存和用户内存.
 
 page directory 保证了通过 page table 编号可以找到对应 page table.
 
@@ -88,6 +180,12 @@ Pintos 页大小为 4096 字节, 低位 12 位用于描述 offset, 则前 20 位
 3. 通过 kernel pool 里面 virtual address 和 physical address 的映射关系找到对应的 page table 的虚拟地址 `lookup_page() pt = pde_get_pt (*pde);`
 4. 通过 virtual address 的中间 10 位在 page table 中找到指向对应的页表项 (page 的地址) 的指针 `lookup_page() return &pt[pt_no (vaddr)];`
 
+### `palloc_get_page (PAL_USER)` 在干什么
+
+我们可以认为 `palloc_get_page (PAL_USER)` 是在分配一个 frame, 在 physical memory 的比 kernel 映射到的更高位的地址获得了一个 frame, 不过需要 `install_page` 将这个 frame 写入 page dir & page table 和 virtual address 建立映射关系.
+
+也就是说, user program 认为高地址是栈区, 低地址是全局区, 但是实际上这些地址都是虚拟地址, 不一定真的在物理内存的高/低地址.
+
 ### page fault
 
 在有虚拟内存时, page fault 有更多种情况
@@ -116,13 +214,26 @@ Pintos 的内存结构决定了我们需要管理的部分为加载可执行文�
 
 ## Task 1: Paging
 
-首先需要建立 frame 结构, frame 需要从 user pool 取得 (`palloc_get_page (PAL_USER)`).
+首先需要建立 page table 结构, 把每个 frame 需要从 user pool 取得 (`palloc_get_page (PAL_USER)`, 需要清空则改为 `palloc_get_page (PAL_USER | PAL_ZERO)` ) 的过程套壳, 方便记录信息. 在分配一个 page 之后, 需要调用 `install_page` 将 page 添加到当前进程的 page directory 中.
+
+```c
+struct frame_or_whatever {
+    void *vaddr; // virtual address
+};
+```
 
 文档提到:
 
 > Synchronization is also a concern: how do you deal with it if process A faults on a page whose frame process B is in the process of evicting?
 
 可知不能并发访问一个 frame, 需要对每个 frame 加锁.
+
+```c
+struct frame_or_whatever {
+    void *vaddr; // virtual address 
+    struct lock frame_lock;
+};
+```
 
 
 
