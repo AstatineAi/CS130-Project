@@ -247,11 +247,13 @@ struct frame_or_whatever {
 如果改成加上 ref count, 可以实现共享 frame (想了一下, 好难).
 
 ```c
-struct frame_table_entry {
+struct frame_table_entry{
     void *kaddr;                        // Kernel address
     struct sup_page_table_entry *spte;  // Supplementary page table entry
     struct thread* owner;               // Owner of the frame
     struct list_elem elem;              // List element for list of all frames
+    struct lock frame_lock;             // Lock for frame
+    bool pinned;                        // Is frame pinned
 };
 ```
 
@@ -271,13 +273,15 @@ struct sup_page_table_entry {
 
     struct hash_elem elem;  // Hash element for supplementary page table
 
-    bool accessed;          // Is page accessed
-    bool dirty;             // Is page dirty
     size_t swap_index;      // Swap index
 };
 ```
 
 还需要实现 swap, 使用 device/block.h 里面的 block device, 用于读写 swap slot.
+
+在 `swap_init` 里面初始化 swap slot, `block_get_role (BLOCK_SWAP);` 可以获取 swap slot 的 block device.
+
+按照 page 大小决定每个 page 需要多少 sector, 建立一个总 sector 数除以每个 page 需要的 sector 数的 bitmap, 每个 bit 代表这个 swap slot 是否被占用.
 
 ## Task 2: Stack growth
 
