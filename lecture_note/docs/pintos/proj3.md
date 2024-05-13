@@ -231,17 +231,6 @@ struct frame_or_whatever {
 
 文档提到:
 
-> Synchronization is also a concern: how do you deal with it if process A faults on a page whose frame process B is in the process of evicting?
-
-可知不能并发访问一个 frame, 需要对每个 frame 加锁.
-
-```c
-struct frame_or_whatever {
-    void *kaddr;
-    struct lock frame_lock;
-};
-```
-
 > To simplify your design, you may store these data structures in non-pageable memory. That means that you can be sure that pointers among them will remain valid.
 
 这里的 non-pageable memory 指的是 kernel pool, 也就是说最好在 kernel pool 里面分配 frame.
@@ -254,28 +243,37 @@ struct frame_table_entry{
     struct sup_page_table_entry *spte;  // Supplementary page table entry
     struct thread* owner;               // Owner of the frame
     struct list_elem elem;              // List element for list of all frames
-    struct lock frame_lock;             // Lock for frame
     bool pinned;                        // Is frame pinned
 };
 ```
 
-然后需要实现 supplmentary page table, 用于记录 page 的信息, 以及记录 page 的状态.
+然后需要实现 supplmentary page table, 用于记录 page 的信息, 状态, 在 page fault 时会以这些东西决定加载 page 方式.
 
 ```c
+enum sup_page_type {
+    PAGE_ZERO,    // All zero page
+    PAGE_FILE,    // Page from file
+    PAGE_SWAP,    // Page swapped out
+    PAGE_MMAP     // Memory mapped file
+};
+
 struct sup_page_table_entry {
-    void *user_vaddr;       // User virtual address
+    void *uaddr;              // User virtual address
+    void *kaddr;              // Kernel virtual address
 
-    bool is_loaded;         // Is page loaded
-    bool writable;          // Is page writable
+    bool writable;            // Is page writable
+    enum sup_page_type type;  // Type of page
 
-    struct file *file;      // File to load page from
-    off_t offset;           // Offset in file
-    uint32_t read_bytes;    // Number of bytes to read
-    uint32_t zero_bytes;    // Number of bytes to zero
+    struct lock spte_lock;    // Lock for page
 
-    struct hash_elem elem;  // Hash element for supplementary page table
+    struct file *file;        // File to load page from
+    off_t offset;             // Offset in file
+    uint32_t read_bytes;      // Number of bytes to read
+    uint32_t zero_bytes;      // Number of bytes to zero
 
-    size_t swap_index;      // Swap index
+    struct hash_elem elem;    // Hash element for supplementary page table
+
+    size_t swap_index;        // Swap index
 };
 ```
 
@@ -291,12 +289,12 @@ struct sup_page_table_entry {
     - `palloc_get_page` 内置了锁, 保证分配是原子的
     - 一个 frame 从 `palloc_get_page` 获取到, 另一个需要 evict frame, 两个进程的 critical section 是修改 frame table 部分, 需要加锁
     - 两个进程同时 evict frame, 需要保证不 evict 同一个 frame
-2. 一个进程 page fault 时, 另一个进程正在 evict frame
-    - fault 申请到的新 frame 不能被 evict, 把 frame pin 住
-3. 正在被 evict 的 frame 被原来的 frame 持有者访问
+2. 正在被 evict 的 frame 被原来的 frame 持有者访问
     - 保证在换出等等操作之前进入如下状态: 原来持有者通过 page table 访问此 frame 时引起 page fault
     - 需要使用 `pagedir_clear_page` 清除 page table 中的映射关系
+3. 一个进程 page fault 并且获取到了 frame, 另一个进程尝试 evict 这个 frame.
 4. 正在从 disk 读取 page 时, 此 page 的 frame 不应该被其他进程 evict
+    - evict 时从 frame table 移除.
     - 读取完成之前不加入 frame table.
 5. 在 syscall 时发生的 page fault
     - 参见 Task 4
@@ -335,3 +333,7 @@ mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.
 ## Task 4: Accessing user memory
 
 需要保证在进入内核时, 用户内存是合法的, 且需要避免一些持有资源情况下遇到 page fault 的情况.
+
+情景: 进程 A syscall read, 但是 read 的 buffer 不在内存中, 需要为 buffer 分配 frame, 此时 A 持有 `filesys_lock`. 进程 B 引发 page fault, 获取了 `frame_table_lock`, 但是为了 evict frame 需要获取 `filesys_lock` (例如从 B 的可执行文件读 bss 信息, 把 evict 的部分写回文件系统), 此时 A 和 B 互相等待对方释放锁, 造成死锁.
+
+可能比较好的方式是, 通过检验地址是否在 page table 中, 然后把没有加载的 page 加入到 frame table 中且 pin 住. 此时在访问文件系统的部分就不会出现 page fault, 在 syscall 结束之前 unpin 即可.
