@@ -152,7 +152,7 @@ Pintos 页大小为 4096 字节, 低位 12 位用于描述 offset, 则前 20 位
 
 页编号用于找到对应的 page table, page table 找 frame, frame 加上 virtual address 中的 offset 部分映射到物理内存.
 
-但是如果需要通过页编号找到对应的 page table, 就需要保证所有的 page table 都在内存中, 但是这样会导致 page table 占用大量内存. 引入 page directory, 划分地址的高 10 位为 page directory index, 低 10 位为 page table index, 末尾 12 位为 offset.
+但是如果需要通过页编号找到对应的 page table, 就需要保证所有的 page table 都在内存中, 但是并不是所有的 page 都存在, 这样会导致 page table 占用大量内存. 引入 page directory, 划分地址的高 10 位为 page directory index, 低 10 位为 page table index, 末尾 12 位为 offset.
 
 ```
     31                22 21        12 11          0
@@ -337,3 +337,89 @@ mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.
 情景: 进程 A syscall read, 但是 read 的 buffer 不在内存中, 需要为 buffer 分配 frame, 此时 A 持有 `filesys_lock`. 进程 B 引发 page fault, 获取了 `frame_table_lock`, 但是为了 evict frame 需要获取 `filesys_lock` (例如从 B 的可执行文件读 bss 信息, 把 evict 的部分写回文件系统), 此时 A 和 B 互相等待对方释放锁, 造成死锁.
 
 可能比较好的方式是, 通过检验地址是否在 page table 中, 然后把没有加载的 page 加入到 frame table 中且 pin 住. 此时在访问文件系统的部分就不会出现 page fault, 在 syscall 结束之前 unpin 即可.
+
+## 实现
+
+### swap
+
+定义于 `vm/swap.h`, `vm/swap.c`, 用于管理 swap slot.
+
+在 `thread/vaddr.h` 里面定义了 `PGSIZE` (4096), 表示 page 的大小. 在 `devices/block.h` 里面定义了 `BLOCK_SECTOR_SIZE`, 表示 block 的大小 (512), 于是每个换出的 page  占用的 sector 数即为 `PGSIZE / BLOCK_SECTOR_SIZE`.
+
+包含一个 bitmap 用于记录 swap slot 的使用情况. 在初始化时, 通过 `block_get_role (BLOCK_SWAP)` 获取 swap block, 然后计算出 swap slot 的数量, 初始化 bitmap.
+
+由于不确定 block 是否支持并发读写, 所以需要加全局锁 `swap_lock`, 如果可以并发读写, 那么只需要锁 `swap_bitmap` 即可.
+
+在 `swap_out` 时, 找到一个空闲的 swap slot, 设置为占用, 然后将 frame 写入 swap slot, 返回 swap slot 的编号.
+
+在 `swap_in` 时, 读取 swap slot 的内容, 将其写入 frame, 然后释放 swap slot.
+
+### frame
+
+定义于 `vm/frame.h` ,`vm/frame.c`, 用于管理 frame.
+
+```c
+struct frame_table_entry {
+    void *kaddr;                        // Kernel address
+    struct sup_page_table_entry *spte;  // Supplementary page table entry
+    struct thread* owner;               // Owner of the frame
+    struct list_elem elem;              // List element for list of all frames
+    bool pinned;                        // Is frame pinned
+};
+```
+
+frame 需要实现包含了 eviction 的与 `palloc_get_page (PAL_USER)`, `palloc_free_page` 同功能的函数.
+
+由于使用 `list` 来管理 frame, 所以需要加锁 `frame_list_lock`.
+
+### page
+
+```c
+enum sup_page_type
+  {
+    PAGE_ZERO,    // All zero page
+    PAGE_FILE,    // Page from file
+    PAGE_SWAP,    // Page swapped out
+    PAGE_MMAP     // Memory mapped file
+  };
+
+struct sup_page_table_entry
+  {
+    void *uaddr;              // User virtual address
+    void *kaddr;              // Kernel virtual address
+
+    bool writable;            // Is page writable
+    enum sup_page_type type;  // Type of page
+
+    struct lock spte_lock;    // Lock for page
+
+    struct file *file;        // File to load page from
+    off_t offset;             // Offset in file
+    uint32_t read_bytes;      // Number of bytes to read
+    uint32_t zero_bytes;      // Number of bytes to zero
+
+    struct hash_elem elem;    // Hash element for supplementary page table
+
+    size_t swap_index;        // Swap index
+  };
+```
+
+在 `struct thread` 内加上 `struct hash sup_page_table`, 注意 `hash` 初始化时需要分配内存用于创建桶, 需要在系统初始化完成后才能调用, 不在创建 `main` 等内核线程的时候调用即可.
+
+#### 创建 supplementary page table
+
+#### 使用 supplementary page table
+
+### 加载可执行文件
+
+实现 lazy loading
+
+### 处理 page fault
+
+#### 栈增长
+
+#### 加载
+
+### mmap/munmap
+
+在 `struct thread` 内加上 `struct list mmap_list`
