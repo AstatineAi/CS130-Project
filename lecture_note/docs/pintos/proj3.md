@@ -414,11 +414,36 @@ struct sup_page_table_entry
 
 实现 lazy loading
 
+一个 page 有以下几种情况:
+
+- 来自可执行文件 (程序静态区内存)
+    - 没有加载 `PAGE_FILE` / `PAGE_ZERO`
+    - 加载到了内存里面, dirty / 不 dirty `PAGE_FRAME`
+        - 由是否 dirty 决定是否需要换出.
+        - 一旦 dirty 就永远被标记为 dirty
+    - 被换出, 在 swap slot 里面 `PAGE_SWAP`
+- 来自文件系统 (mmap) `PAGE_MMAP`
+    - 加载到了内存里面, dirty / 不 dirty
+    - 被换出, 即被存回文件里面
+- 栈
+    - 栈增长新增的 `PAGE_FRAME`
+    - 被换出 `PAGE_SWAP`
+
 ### 处理 page fault
 
 #### 栈增长
 
+32 位机器, `PUSHA` 指令会将 32 字节的数据压入栈, 所以可以认为最大的栈增长是一次 32 字节的操作, 超过 32 字节的操作视为非法访问.
+
+同时检查当前总计的栈区大小, 如果超过了限制, 也视为非法访问.
+
+但是存在一个问题, 如果在 kernel mode 触发 page fault, 此时没有栈指针的信息, 需要在 syscall 时记录以实现 syscall 中栈增长.
+
 #### 加载
+
+在 kernel 情况下发生的 page fault, 需要判断是否是合法访问, 如果是合法访问, 需要将 page 加入到 frame table 中, 并 pin 住, 在 syscall 结束之前 unpin, 防止死锁
+
+在 user 情况下发生的 page fault 不考虑 pin 的问题.
 
 ### mmap/munmap
 
