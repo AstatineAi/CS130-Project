@@ -21,6 +21,11 @@
 #include "threads/vaddr.h"
 #include "threads/malloc.h"
 
+#ifdef VM
+#include "vm/page.h"
+#include "vm/frame.h"
+#endif
+
 static bool load (const char *file_name, char *args, void (**eip) (void), void **esp);
 void free_child_list (struct thread *);
 void close_thread_files (struct thread *);
@@ -49,9 +54,6 @@ process_execute (const char *file_name)
   /* Get executable file name. */
   fn_copy1 = strtok_r (fn_copy1, " ", &save_ptr);
 
-  /* Initiliaze child status record. */
-  struct thread *cur = thread_current ();
-
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (fn_copy1, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -61,6 +63,7 @@ process_execute (const char *file_name)
   else
     {
       /* Wait for the child process to load. */
+      struct thread *cur = thread_current ();
       sema_down (&cur->load_sema);
       /* If loading failed, return -1. */
       if (cur->load_state == LOAD_FAIL)
@@ -97,6 +100,10 @@ start_process (void *file_name_)
   if (success)
     {
       parent->load_state = LOAD_SUCCESS;
+      
+      /* Initalize child status. 
+         malloc() allocates memory in kernel pool, so
+         it's possible to allocate here and free it in parent process.*/
       struct child_status *cs = malloc (sizeof (struct child_status));
   
       if (cs != NULL)
@@ -220,6 +227,13 @@ process_exit (void)
 
   free_child_list (cur);
   close_thread_files (cur);
+
+#ifdef VM
+  /* Free all pages in the frame table. */
+  process_free_mmap_files (&cur->mmap_list);
+  process_free_all_frames (cur);
+  process_free_all_pages (&cur->sup_page_table);
+#endif /* VM */
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -446,10 +460,6 @@ load (const char *file_name, char *args, void (**eip) (void), void **esp)
   return success;
 }
 
-/* load() helpers. */
-
-static bool install_page (void *upage, void *kpage, bool writable);
-
 /* Checks whether PHDR describes a valid, loadable segment in
    FILE and returns true if so, false otherwise. */
 static bool
@@ -526,6 +536,21 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
+#ifdef VM
+      /* Set up supplementary page table entry
+         but do not load the page yet. */
+      if (!lazy_load_file_page (file, ofs, upage,
+                                page_read_bytes, page_zero_bytes,
+                                writable))
+        return false;
+
+      /* Advance. */
+      read_bytes -= page_read_bytes;
+      zero_bytes -= page_zero_bytes;
+      upage += PGSIZE;
+      ofs += PGSIZE;
+#else
+
       /* Get a page of memory. */
       uint8_t *kpage = palloc_get_page (PAL_USER);
       if (kpage == NULL)
@@ -550,6 +575,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+#endif
     }
   return true;
 }
@@ -559,28 +585,26 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp, char *args) 
 {
-  uint8_t *kpage;
+  
   bool success = false;
-
-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
-  if (kpage != NULL) 
-    {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        palloc_free_page (kpage);
-    }
 
   /* Argument passing. */
   int argc = 0;
   char **argv = malloc (sizeof (char *) * strlen(args));
   char *token, *save_ptr;
   if (argv == NULL)
-  {
-    palloc_free_page (kpage);
     return false;
-  }
+
+  if (stack_grow(PHYS_BASE - PGSIZE, false))
+    {
+      *esp = PHYS_BASE;
+      success = true;
+    }
+  else
+    {
+      free (argv);
+      return false;
+    }
 
   /* Get tokens and push to stack. */
   for (token = strtok_r (args, " ", &save_ptr); token != NULL;
@@ -592,8 +616,12 @@ setup_stack (void **esp, char *args)
     argc++;
   }
 
-  /* Word align. */
-  *esp = (void *) ((unsigned int) *esp & 0xfffffffc);
+  /* Word align and clear stack. */
+  while ((uint32_t) *esp % 4 != 0)
+    {
+      *esp -= sizeof (uint8_t);
+      memset (*esp, 0, sizeof (uint8_t));
+    }
 
   /* Push argv[] pointers. */
   argv[argc] = NULL;
@@ -627,7 +655,7 @@ setup_stack (void **esp, char *args)
    with palloc_get_page().
    Returns true on success, false if UPAGE is already mapped or
    if memory allocation fails. */
-static bool
+bool
 install_page (void *upage, void *kpage, bool writable)
 {
   struct thread *t = thread_current ();

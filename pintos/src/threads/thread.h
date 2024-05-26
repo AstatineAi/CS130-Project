@@ -4,8 +4,13 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include <hash.h>
 
 #include "synch.h"
+
+#ifdef VM
+typedef int mapid_t;
+#endif /* VM */
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -119,6 +124,14 @@ struct thread
     enum load_status load_state;        /* State if loading success */
 #endif
 
+#ifdef VM
+    void *save_esp;                     /* Save stack pointer for page fault */
+    struct hash sup_page_table;         /* Supplementary page table */
+
+    mapid_t mapid_cnt;                  /* Allocate mapid */
+    struct list mmap_list;              /* List of files mapped to memory */
+#endif
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
@@ -138,6 +151,14 @@ struct file_descriptor
     int fd;
     struct file *file;
     struct list_elem elem;
+  };
+
+struct mmap_file
+  {
+    mapid_t mapid;
+    struct file *file;
+    struct list_elem elem;
+    void *base;
   };
 
 /* If false (default), use round-robin scheduler.

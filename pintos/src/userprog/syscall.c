@@ -9,13 +9,16 @@
 #include "list.h"
 #include "stdbool.h"
 #include "threads/interrupt.h"
+#include "threads/thread.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "threads/malloc.h"
 #include "userprog/process.h"
+#include "userprog/pagedir.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
+#include "vm/frame.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -39,6 +42,7 @@ static int syscall_write (int, const void *, unsigned);
 static void syscall_seek (int, unsigned);
 static unsigned syscall_tell (int);
 static void syscall_close (int);
+static mapid_t syscall_mmap (int, void *);
 
 /* Reads a byte at user virtual address UADDR.
    UADDR must be below PHYS_BASE.
@@ -136,6 +140,9 @@ static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
   int syscall_id = *(int *) validate_user_read_ptr (f->esp, sizeof (int));
+#ifdef VM
+  thread_current ()->save_esp = f->esp;
+#endif
   switch (syscall_id)
     {
       case SYS_HALT:
@@ -237,9 +244,26 @@ syscall_handler (struct intr_frame *f UNUSED)
           syscall_close (fd);
           break;
         }
+      case SYS_MMAP:
+        {
+          int fd = *(int *) validate_user_read_ptr (f->esp + sizeof (int *),
+                                                    sizeof (int));
+          void *addr = *(void **) validate_user_read_ptr (f->esp + 2 * sizeof (int *),
+                                                         sizeof (void *));
+          f->eax = (uint32_t) syscall_mmap (fd, addr);
+          break;
+        }
+      case SYS_MUNMAP:
+        {
+          mapid_t mapping = *(mapid_t *) validate_user_read_ptr (f->esp + sizeof (int *),
+                                                                sizeof (mapid_t));
+          syscall_munmap (mapping);
+          break;
+        }
       default:
         PANIC("Unknown system call.");
     }
+  process_unpin_all_frames (thread_current ());
 }
 
 static void
@@ -441,4 +465,110 @@ syscall_close (int fd)
 
   list_remove (&file_desc->elem);
   free (file_desc);
+}
+
+static mapid_t
+syscall_mmap (int fd, void *addr)
+{
+  /* Validate address. */
+  if (addr == NULL || pg_ofs (addr) != 0)
+    return -1;
+  /* Validate fd. */
+  if (fd == STDIN_FILENO || fd == STDOUT_FILENO)
+    return -1;
+
+  /* Get file descriptor. */
+  struct file_descriptor *file_desc = get_file_by_fd (fd);
+  if (file_desc == NULL)
+    return -1;
+
+  mapid_t mapping = -1;
+
+  lock_acquire (&filesys_lock);
+
+  /* Reopen file */
+  struct file *file = file_reopen (file_desc->file);
+  if (file == NULL)
+    goto done;
+  
+  /* Validate file size & mappeable memory size. */
+  off_t file_size = file_length (file);
+  if (file_size == 0)
+    goto done;
+  for (off_t i = 0; i < file_size; i += PGSIZE)
+    {
+      if (page_get_spte (addr + i) != NULL)
+        goto done;
+    }
+
+  /* Map file tot memory. */
+  for (off_t i = 0; i < file_size; i += PGSIZE)
+    {
+      struct sup_page_table_entry *spte = malloc (sizeof (struct sup_page_table_entry));
+      spte->uaddr = addr + i;
+      spte->kaddr = NULL;
+
+      spte->writable = true;
+      spte->type = PAGE_MMAP;
+
+      spte->file = file;
+      spte->offset = i;
+      spte->read_bytes = i + PGSIZE < file_size ? PGSIZE : file_size - i;
+      spte->zero_bytes = PGSIZE - spte->read_bytes;
+      spte->swap_index = (size_t)-1;
+
+      lock_init (&spte->spte_lock);
+      
+      hash_insert (&thread_current ()->sup_page_table, &spte->elem);
+    }
+
+  /* Add mapping to mmap list. */
+  struct mmap_file *mf = malloc (sizeof (struct mmap_file));
+  mf->file = file;
+  mapping = mf->mapid = thread_current ()->mapid_cnt++;
+  mf->base = addr;
+  list_push_back (&thread_current ()->mmap_list, &mf->elem);
+
+  done :
+  lock_release (&filesys_lock);
+  return mapping;
+}
+
+void
+syscall_munmap (mapid_t mapping)
+{
+  struct thread *cur = thread_current ();
+  struct mmap_file *mf = NULL;
+
+  for (struct list_elem *e = list_begin (&cur->mmap_list);
+       e != list_end (&cur->mmap_list); e = list_next (e))
+    {
+      mf = list_entry (e, struct mmap_file, elem);
+      if (mf->mapid == mapping)
+        break;
+    }
+
+  if (mf == NULL)
+    return;
+
+  /* Write back to file. */
+  for (off_t i = 0; i < file_length (mf->file); i += PGSIZE)
+    {
+      load_page (mf->base + i, true);
+      struct sup_page_table_entry *spte = page_get_spte (mf->base + i);
+      if (pagedir_is_dirty (cur->pagedir, mf->base + i))
+        {
+          lock_acquire (&filesys_lock);
+          file_seek (mf->file, i);
+          file_write (mf->file, spte->kaddr, PGSIZE);
+          lock_release (&filesys_lock);
+        }
+      free_page (mf->base + i);
+    }
+
+  list_remove (&mf->elem);
+  lock_acquire (&filesys_lock);
+  file_close (mf->file);
+  lock_release (&filesys_lock);
+  free (mf);
 }
