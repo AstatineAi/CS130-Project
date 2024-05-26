@@ -250,10 +250,10 @@ struct frame_table_entry{
 然后需要实现 supplmentary page table, 用于记录 page 的信息, 状态, 在 page fault 时会以这些东西决定加载 page 方式.
 
 ```c
-enum sup_page_type {
+enum sup_page_type{
     PAGE_ZERO,    // All zero page
     PAGE_FILE,    // Page from file
-    PAGE_SWAP,    // Page swapped out
+    PAGE_STACK,   // Page on frame
     PAGE_MMAP     // Memory mapped file
 };
 
@@ -264,7 +264,7 @@ struct sup_page_table_entry {
     bool writable;            // Is page writable
     enum sup_page_type type;  // Type of page
 
-    struct lock spte_lock;    // Lock for page
+    struct lock spte_lock;    // Lock for page (wait for swapping to be done)
 
     struct file *file;        // File to load page from
     off_t offset;             // Offset in file
@@ -302,23 +302,27 @@ struct sup_page_table_entry {
     - 保证对同一个 frame 的操作是串行的
     - 需要 I/O 的靠 I/O 的锁互斥
     - 需要 swap 的靠 swap block 的锁互斥
+7. 在一次 load 完成之前, 获取到的 frame 不应该被 evict.
+    - 先 pin 住, 按需要 unpin
+8. 在一个 page 的 frame 完成 evict 之前, 那个 page 的 fault 不能被同时处理
+    - `spte_lock` 保证 fault 处理时, 被 evict 的 frame 已经完整保存到 swap disk.
 
 ### page fault 情况与对策
 
 | 情况编号 | `not_present` | `write` | `user` | 情况 | 对策 |
 | ------- | ------------- | ------- | ------ | --- | --- |
-|   (1)   | `false` | `false` | `false` | 内核非法访问 | `kill()` |
-|   (2)   | `false` | `false` | `true`  | 用户非法访问 | `kill()` (导致 `exit(-1)` ) |
-|   (3)   | `false` | `true`  | `false` | 同理 1 (例如写不可写的内存) | 同 |
+|   (1)   | `false` | `false` | `false` | 内核非法访问 | `exit(-1)` |
+|   (2)   | `false` | `false` | `true`  | 用户非法访问 | `exit(-1)` |
+|   (3)   | `false` | `true`  | `false` | 同理 1 | 同 |
 |   (4)   | `false` | `true`  | `true`  | 同理 2 | 同 |
 |   (5)   | `true`  | `false` | `false` | 在 syscall 中遇到 page fault | 尝试载入 & pin, 在 syscall 结束之前 unpin |
-|   (6)   | `true`  | `false` | `true`  | 被换出/没有加载/栈增长 | 尝试载入 |
+|   (6)   | `true`  | `false` | `true`  | 被换出/没有加载/栈增长 | 尝试载入/栈增长 |
 |   (7)   | `true`  | `true`  | `false` | 同 5 | 同 |
 |   (8)   | `true`  | `true`  | `true`  | 同 6 | 同 |
 
 ## Task 2: Stack growth
 
-在最开始分配一个 page 作为栈, 后续考虑栈增长的情况. 按照 80x86 PUSHA 最多在 esp 低 32 字节的位置引发 page fault, 考虑将 32 字节作为分界, 低于 32 字节时分配新的 page, 否则视为非法访问.
+在最开始分配一个 page 作为栈, 后续考虑栈增长的情况. 按照 80x86 `PUSHA` 最多在 `esp` 低 32 字节的位置引发 page fault, 考虑将 32 字节作为分界, 低于 32 字节时分配新的 page, 否则视为非法访问.
 
 栈增长锁分配的 frame 也可能被 swap out, 此时总是需要保存 frame 的内容, 以便在需要时载入.
 
@@ -326,9 +330,15 @@ struct sup_page_table_entry {
 
 ## Task 3: Memory mapping files
 
-mmap 会将文件映射到连续的页.
+mmap 会将文件映射到连续的页, 映射之前检查这些页没有被映射.
+
+映射时依然需要 lazy loading, 只设置 supplmentary page table 信息, 在访问时载入.
+
+在被 evict 时, 将修改写回文件.
 
 mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.
+
+为了避免写的时候 (此时获取到了 `filesys_lock`) 发生 page fault, 在写之前加载 page 并且 pin 住, 写完之后释放 spte 和对应的 frame.
 
 ## Task 4: Accessing user memory
 
@@ -336,7 +346,7 @@ mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.
 
 情景: 进程 A syscall read, 但是 read 的 buffer 不在内存中, 需要为 buffer 分配 frame, 此时 A 持有 `filesys_lock`. 进程 B 引发 page fault, 获取了 `frame_table_lock`, 但是为了 evict frame 需要获取 `filesys_lock` (例如从 B 的可执行文件读 bss 信息, 把 evict 的部分写回文件系统), 此时 A 和 B 互相等待对方释放锁, 造成死锁.
 
-可能比较好的方式是, 通过检验地址是否在 page table 中, 然后把没有加载的 page 加入到 frame table 中且 pin 住. 此时在访问文件系统的部分就不会出现 page fault, 在 syscall 结束之前 unpin 即可.
+在内核发生 page fault (保证其他部分没有错误, 则此时必然是 syscall 中的 page fault) 时, 加载同时 pin 住 frame, 在 syscall 结束之前 unpin.
 
 ## 实现
 
@@ -370,7 +380,7 @@ struct frame_table_entry {
 
 frame 需要实现包含了 eviction 的与 `palloc_get_page (PAL_USER)`, `palloc_free_page` 同功能的函数.
 
-由于使用 `list` 来管理 frame, 所以需要加锁 `frame_list_lock`.
+由于使用 `list` 来管理 frame, 所以需要加锁 `frame_lock`.
 
 ### page
 
@@ -379,7 +389,7 @@ enum sup_page_type
   {
     PAGE_ZERO,    // All zero page
     PAGE_FILE,    // Page from file
-    PAGE_SWAP,    // Page swapped out
+    PAGE_STACK,   // Page on frame
     PAGE_MMAP     // Memory mapped file
   };
 
@@ -391,7 +401,7 @@ struct sup_page_table_entry
     bool writable;            // Is page writable
     enum sup_page_type type;  // Type of page
 
-    struct lock spte_lock;    // Lock for page
+    struct lock spte_lock;    // Lock for page (wait for swapping to be done)
 
     struct file *file;        // File to load page from
     off_t offset;             // Offset in file
@@ -406,9 +416,15 @@ struct sup_page_table_entry
 
 在 `struct thread` 内加上 `struct hash sup_page_table`, 注意 `hash` 初始化时需要分配内存用于创建桶, 需要在系统初始化完成后才能调用, 不在创建 `main` 等内核线程的时候调用即可.
 
-#### 创建 supplementary page table
+#### 创建 supplementary page 
+
+在 `mmap`, `load` 加载可执行文件, page fault 中触发栈增长时创建.
 
 #### 使用 supplementary page table
+
+spt 的用处即在发生 page fault 时, 提供关于该 page 的额外信息.
+
+通过 hash table, 以地址快速查找对应的 spte.
 
 ### 加载可执行文件
 
@@ -417,17 +433,17 @@ struct sup_page_table_entry
 一个 page 有以下几种情况:
 
 - 来自可执行文件 (程序静态区内存)
-    - 没有加载 `PAGE_FILE` / `PAGE_ZERO`
-    - 加载到了内存里面, dirty / 不 dirty `PAGE_FRAME`
+    - 没有加载
+    - 加载到了内存里面, dirty / 不 dirty
         - 由是否 dirty 决定是否需要换出.
         - 一旦 dirty 就永远被标记为 dirty
-    - 被换出, 在 swap slot 里面 `PAGE_SWAP`
+    - 被换出, 在 swap slot 里面
 - 来自文件系统 (mmap) `PAGE_MMAP`
     - 加载到了内存里面, dirty / 不 dirty
     - 被换出, 即被存回文件里面
 - 栈
-    - 栈增长新增的 `PAGE_FRAME`
-    - 被换出 `PAGE_SWAP`
+    - 栈增长新增的
+    - 被换出
 
 ### 处理 page fault
 
@@ -448,3 +464,15 @@ struct sup_page_table_entry
 ### mmap/munmap
 
 在 `struct thread` 内加上 `struct list mmap_list`
+
+```c
+struct mmap_file
+  {
+    mapid_t mapid;
+    struct file *file;
+    struct list_elem elem;
+    void *base;
+  };
+```
+
+`mmap` 时需要 `file_reopen` 以保证文件描述符不会被关闭, 记录 `base` 以在 `munmap` 时查找然后释放对应的 spte.
