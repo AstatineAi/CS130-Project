@@ -1,0 +1,1640 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../proj2/">
+      
+      
+        <link rel="next" href="../proj4/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.37">
+    
+    
+      
+        <title>Project 3 - CS130 操作系统 笔记</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8c3ca2c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#project-3-virtual-memory" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="CS130 操作系统 笔记" class="md-header__button md-logo" aria-label="CS130 操作系统 笔记" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CS130 操作系统 笔记
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Project 3
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indego"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../lec0/" class="md-tabs__link">
+          
+  
+    
+  
+  课程笔记
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../proj1/" class="md-tabs__link">
+          
+  
+    
+  
+  pintos
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="CS130 操作系统 笔记" class="md-nav__button md-logo" aria-label="CS130 操作系统 笔记" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CS130 操作系统 笔记
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    首页
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    课程笔记
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            课程笔记
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lec0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lecture 0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    pintos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            pintos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj1/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 1
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj2/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 2
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Project 3
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Project 3
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统限制依然存在
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      分析
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="分析">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#virtual-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      什么是 virtual address
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#virtual-address-physical-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      virtual address -&gt; physical address
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#palloc_get_page-pal_user" class="md-nav__link">
+    <span class="md-ellipsis">
+      palloc_get_page (PAL_USER) 在干什么
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault" class="md-nav__link">
+    <span class="md-ellipsis">
+      page fault
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      总结
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-1-paging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 1: Paging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 1: Paging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      同步问题
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      page fault 情况与对策
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-stack-growth" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 2: Stack growth
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-memory-mapping-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 3: Memory mapping files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-accessing-user-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 4: Accessing user memory
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      实现
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="实现">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      swap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      frame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page" class="md-nav__link">
+    <span class="md-ellipsis">
+      page
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="page">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supplementary-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      创建 supplementary page
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supplementary-page-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      使用 supplementary page table
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      加载可执行文件
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      处理 page fault
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="处理 page fault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      栈增长
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      加载
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mmapmunmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      mmap/munmap
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 4
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统限制依然存在
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      分析
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="分析">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#virtual-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      什么是 virtual address
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#virtual-address-physical-address" class="md-nav__link">
+    <span class="md-ellipsis">
+      virtual address -&gt; physical address
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#palloc_get_page-pal_user" class="md-nav__link">
+    <span class="md-ellipsis">
+      palloc_get_page (PAL_USER) 在干什么
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault" class="md-nav__link">
+    <span class="md-ellipsis">
+      page fault
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      总结
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-1-paging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 1: Paging
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 1: Paging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      同步问题
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      page fault 情况与对策
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2-stack-growth" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 2: Stack growth
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3-memory-mapping-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 3: Memory mapping files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4-accessing-user-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 4: Accessing user memory
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      实现
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="实现">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      swap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      frame
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page" class="md-nav__link">
+    <span class="md-ellipsis">
+      page
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="page">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supplementary-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      创建 supplementary page
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#supplementary-page-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      使用 supplementary page table
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      加载可执行文件
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page-fault_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      处理 page fault
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="处理 page fault">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      栈增长
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      加载
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mmapmunmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      mmap/munmap
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="project-3-virtual-memory">Project 3: Virtual Memory<a class="headerlink" href="#project-3-virtual-memory" title="Permanent link">&para;</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">No plagiarism</p>
+<p>If you are enrolled in CS130, you may not copy code from this repository.
+Project 3 强调设计, 具体实现因人而异. 如果你真的没有头绪, 可以先看看 design document 模板.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">急了急了急了</p>
+<p>Project 3 基于 Project 2, 希望你的 Project 2 足够 robust 且有合适的非法地址检测.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Overview</p>
+<ul>
+<li>Task 1 : paging</li>
+<li>Task 2 : stack growth</li>
+<li>Task 3 : memory mapping files</li>
+<li>Task 4 : accessing user memory</li>
+</ul>
+</div>
+<h2 id="_1">文件系统限制依然存在<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<ul>
+<li>可能并发访问文件, 考虑加锁</li>
+<li>文件大小固定, 控制文件名长度不超过 14 字符</li>
+</ul>
+<h2 id="_2">分析<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>空啊, 很空啊 (指 vm 文件夹).</p>
+<p><code>Make.vars</code> 里面添加了宏定义 <code>VM</code>, 可以像之前的 <code>#ifdef USERPROG</code> 一样使用.</p>
+<p>新增的 <code>.c</code> 文件需要在 <code>Makefile.build</code> 里面添加到 <code>vm_SRC</code>.</p>
+<h3 id="virtual-address">什么是 virtual address<a class="headerlink" href="#virtual-address" title="Permanent link">&para;</a></h3>
+<p>对 virtual address 的支持是从 bare metal 开始的 (到达硬件 (相对来说比较) 底层! 太美丽了 CPU, 哎呀这不 DRAM 吗, 还是看看远处的一生一芯吧家人们), 回看 pintos 的启动过程, <code>start.S</code> 里面的汇编最开始直接访问的是物理地址, 但是在启动过程中 <code>movl %eax, %cr3</code> 设置了 CR3 寄存器, 即在进入保护模式之后, 一切 "按照地址访问" 实际上都是访问虚拟地址.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>+------------------+  &lt;- 0xFFFFFFFF (4GB)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>|      32-bit      |
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>|  memory mapped   |
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>|     devices      |
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>|                  |
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>/\/\/\/\/\/\/\/\/\/\
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>/\/\/\/\/\/\/\/\/\/\
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>|                  |
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>|      Unused      |
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>|                  |
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>+------------------+  &lt;- depends on amount of RAM
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>|                  |
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>|                  |
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>| Extended Memory  |
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>|                  |
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>|                  |
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>+------------------+  &lt;- 0x00100000 (1MB)
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>|     BIOS ROM     |
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>+------------------+  &lt;- 0x000F0000 (960KB)
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>|  16-bit devices, |
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>|  expansion ROMs  |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>+------------------+  &lt;- 0x000C0000 (768KB)
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>|   VGA Display    |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>+------------------+  &lt;- 0x000A0000 (640KB)
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>|  pintos kernel   |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>+------------------+  &lt;- 0x00020000 (128KB)
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>|  page tables     |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>|  for startup     |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>+------------------+  &lt;- 0x00010000 (64KB)
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>|  page directory  |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>|  for startup     |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>+------------------+  &lt;- 0x0000f000 (60KB)
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>|  initial kernel  |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>|   thread struct  |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>+------------------+  &lt;- 0x0000e000 (56KB)
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>|        /         |
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>+------------------+  &lt;- 0x00007e00 (31.5KB)
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>|   pintos loader  |
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>+------------------+  &lt;- 0x00007c00 (31KB)
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>|        /         |
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>+------------------+  &lt;- 0x00000600 (1536B)
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>|     BIOS data    |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>+------------------+  &lt;- 0x00000400 (1024B)
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>|     CPU-owned    |
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>+------------------+  &lt;- 0x00000000
+</code></pre></div>
+<p>除了上面这张图的 "0x....." 是确实在硬件里面的地址, 其他都是虚拟地址 (进入保护模式了).</p>
+<p>然后这层地址是 start.S 创造的只映射了几 MB 的 page directory 的状态, 在高级初始化过程中, <code>paging_init ()</code> 函数初始化了更完整的 page directory (<code>init_page_dir</code>), 然后修改 CR3 寄存器, 使得 CPU 从此开始使用新的 page directory.</p>
+<p>这个 page directory 确定了 kernel virtual memory 到 physical memory 的映射, 内核的 virtual memmory 范围为 <code>PHYS_BASE</code> 到 <code>0xFFFFFFFF</code> (4 GB), 且内核 virtual memory 和 physical memory 映射关系固定为 <code>vaddr = paddr + PHYS_BASE</code>.</p>
+<p>由于 CPU 必须读取 page table 的物理地址, 但 x86 没有提供直接读写物理地址的指令, 所以需要 kernel virtual memory 的这种线性映射关系, 以实现修改 page directory / page table 的目的.</p>
+<p>在 kernel 的 1 GB 内存中, 还保存了 page 分配的信息 (bitmap), 以此实现了 palloc get/free 的功能.</p>
+<p>现在的 virtual memory 布局如下:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>   (4 GB)    +----------------------------------+
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>             |                                  |
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>             |       kernel virtual memory      |
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>             |                                  |
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>   PHYS_BASE +----------------------------------+
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>             |            user stack            |
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>             |                 |                |
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>             |                 |                |
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>             |                 V                |
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>             |          grows downward          |
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>             |                                  |
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>             |         LOL, no heap memory      |
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>             |                                  |
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>             |                                  |
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>             |           grows upward           |
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>             |                 ^                |
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>             |                 |                |
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>             |                 |                |
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>             +----------------------------------+
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>             | uninitialized data segment (BSS) |
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>             +----------------------------------+
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>             |     initialized data segment     |
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>             +----------------------------------+
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>             |           code segment           |
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>  0x08048000 +----------------------------------+
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>             |                                  |
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>             |                                  |
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>             |                                   |
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>             |                                  |
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>             |                                  |
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>           0 +----------------------------------+
+</code></pre></div>
+<p>内核内存全局共享, 在 project 2 使用的 <code>thread/malloc.c</code> 里面实现的 <code>malloc()</code>, <code>free()</code> 和 <code>palloc_get_page (0)</code> 都是从此部分内存中分配.</p>
+<p>在 <code>userprog/pagedir.c pagedir_activate()</code> 通过内联汇编修改 <code>CR3</code> 寄存器 (若该进程未设置 page directory, 则使用只映射了 kernel virtual memory 的 <code>init_page_dir</code>), 更改 CPU 查找虚拟内存时使用的 page directory, 来实现切换线程时的内存切换.</p>
+<p>所有的新的 page directory 都是在 <code>init_page_dir</code> 基础上加入了用户内存的映射, 保证可以访问内核内存和用户内存.</p>
+<p>page directory 保证了通过 page table 编号可以找到对应 page table.</p>
+<p>在一个 page 被切换出去后, 使用这个 page 的进程可能又要用到这个 page, 需要把切出的 page 放到 disk 上, 以便在需要时再次载入到内存.</p>
+<p>user virtual memory 布局和 C 程序内存布局相似, 栈区从高地址向低地址增长, 但是不支持动态分配堆区, 全局区在低地址, 加载可执行文件时被初始化.</p>
+<p>由于每个 page 的大小都相同, 且每个 page 都是对齐的, 即第 <span class="arithmatex">\(k\)</span> 个页的虚拟内存范围为 <span class="arithmatex">\([k \times pageSize, (k+1) \times pageSize)\)</span>.</p>
+<p>即用一个地址的低位表示这个地址在对应页相对页开头的偏移量 offset, 高位表示页编号, 恰好可以完成地址到页和页内地址的映射.</p>
+<p>Pintos 页大小为 4096 字节, 低位 12 位用于描述 offset, 则前 20 位可以用于页编号.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>    31               12 11        0
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    +-------------------+-----------+
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    |    Page Number    |   Offset  |
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    +-------------------+-----------+
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>            Virtual Address
+</code></pre></div>
+<p>页编号用于找到对应的 page table, page table 找 frame, frame 加上 virtual address 中的 offset 部分映射到物理内存.</p>
+<p>但是如果需要通过页编号找到对应的 page table, 就需要保证所有的 page table 都在内存中, 但是并不是所有的 page 都存在, 这样会导致 page table 占用大量内存. 引入 page directory, 划分地址的高 10 位为 page directory index, 低 10 位为 page table index, 末尾 12 位为 offset.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>    31                22 21        12 11          0
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    +-------------------+------------+------------+
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    | Page Directory Idx| Page Table |   Offset   |
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    +-------------------+------------+------------+
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>                Virtual Address
+</code></pre></div>
+<p>除此之外, 还需要 swap slot, 用于明确如何存储被换出的 page.</p>
+<h3 id="virtual-address-physical-address">virtual address -&gt; physical address<a class="headerlink" href="#virtual-address-physical-address" title="Permanent link">&para;</a></h3>
+<p>回顾目前的结构</p>
+<ol>
+<li>每个 process 有一个 page directory, 隔离了不同进程的内存</li>
+<li>page directory 包含许多 page table</li>
+<li>page table 包含许多 page</li>
+<li>page 表示一段虚拟内存</li>
+<li>page 的情况<ul>
+<li>有的 page 对应了 frame</li>
+<li>有的 page 对应了 swap slot</li>
+<li>有的 page 地址合法但是没有被分配</li>
+</ul>
+</li>
+</ol>
+<p>现在, 我们有一个 32-bit 的 virtual address, 需要找到对应的 physical address.</p>
+<ol>
+<li>通过 <code>struct thread</code> 的 <code>pagedir</code> 指针找到 page directory</li>
+<li>通过 virtual address 的高 10 位在 page directory 中找到指向对应的页目录项 (page table 的物理地址) 的指针  <code>lookup_page() pde = pd + pd_no (vaddr);</code></li>
+<li>通过 kernel pool 里面 virtual address 和 physical address 的映射关系找到对应的 page table 的虚拟地址 <code>lookup_page() pt = pde_get_pt (*pde);</code></li>
+<li>通过 virtual address 的中间 10 位在 page table 中找到指向对应的页表项 (page 的地址) 的指针 <code>lookup_page() return &amp;pt[pt_no (vaddr)];</code></li>
+</ol>
+<h3 id="palloc_get_page-pal_user"><code>palloc_get_page (PAL_USER)</code> 在干什么<a class="headerlink" href="#palloc_get_page-pal_user" title="Permanent link">&para;</a></h3>
+<p>我们可以认为 <code>palloc_get_page (PAL_USER)</code> 是在分配一个 frame, 在 physical memory 的比 kernel 映射到的更高位的地址获得了一个 frame, 不过需要 <code>install_page</code> 将这个 frame 写入 page dir &amp; page table 和 virtual address 建立映射关系. (如果是 <code>palloc_get_page (0)</code>, 那么映射关系已经在 <code>init_page_dir</code> 里面建立好了, 直接按返回的指针使用即可)</p>
+<p>也就是说, user program 认为高地址是栈区, 低地址是全局区, 但是实际上这些地址都是虚拟地址, 不一定真的在物理内存的高/低地址.</p>
+<h3 id="page-fault">page fault<a class="headerlink" href="#page-fault" title="Permanent link">&para;</a></h3>
+<p>在有虚拟内存时, page fault 有更多种情况</p>
+<ul>
+<li>访问的虚拟地址合法<ul>
+<li>没有对应的页</li>
+<li>对应的页没有载入内存</li>
+</ul>
+</li>
+<li>访问的虚拟地址非法<ul>
+<li>中止进程, 防止操作系统崩溃</li>
+</ul>
+</li>
+</ul>
+<h3 id="_3">总结<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>Pintos 的内存结构决定了我们需要管理的部分为加载可执行文件时的静态/全局区内存, 以及栈内存 (在访问到时实现 stack growth 而不是结束进程), 这些部分是会被 swap in/out 的, 在 <code>PHYS_BASE</code> 之上的内核内存不需要这方面考虑.</p>
+<p>用户内存行为包括</p>
+<ol>
+<li>静态区内存: 在低地址, 大小在加载可执行文件时可以确定.</li>
+<li>栈区: 在高地址, 需要确定一个增长策略.</li>
+<li>非法访问: 导致 exit -1</li>
+</ol>
+<p>静态区需要实现 lazy loading, 即加载可执行文件时不载入内存, 在访问时出现 page fault 时载入.</p>
+<p>栈区需要实现 stack growth, 先判断当前行为是可能导致堆栈还是非法访问, 然后根据情况处理是否要为栈区分配新的 page.</p>
+<p>除此之外, 需要实现 swap in/out, 在无法分配新的 frame 时, 将不常用的 page 换出到 disk 上. 有被修改的 page 需要写回 disk (有 dirty bit 的情况), 而没有被修改的 page 可以直接丢弃, 在需要时可以从原来的文件载入.</p>
+<h2 id="task-1-paging">Task 1: Paging<a class="headerlink" href="#task-1-paging" title="Permanent link">&para;</a></h2>
+<h3 id="_4">结构<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>首先需要建立 page table 结构, 把每个 frame 需要从 user pool 取得 (<code>palloc_get_page (PAL_USER)</code>, 需要清空则改为 <code>palloc_get_page (PAL_USER | PAL_ZERO)</code> ) 的过程套壳, 方便记录信息. 在分配一个 page 之后, 需要调用 <code>install_page</code> 将 page 添加到当前进程的 page directory 中.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">frame_or_whatever</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">kaddr</span><span class="p">;</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">};</span>
+</code></pre></div>
+<p>文档提到:</p>
+<blockquote>
+<p>To simplify your design, you may store these data structures in non-pageable memory. That means that you can be sure that pointers among them will remain valid.</p>
+</blockquote>
+<p>这里的 non-pageable memory 指的是 kernel pool, 也就是说最好在 kernel pool 里面分配 frame.</p>
+<p>如果改成加上 ref count, 可以实现共享 frame (想了一下, 好难).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">frame_table_entry</span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">kaddr</span><span class="p">;</span><span class="w">                        </span><span class="c1">// Kernel address</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">sup_page_table_entry</span><span class="w"> </span><span class="o">*</span><span class="n">spte</span><span class="p">;</span><span class="w">  </span><span class="c1">// Supplementary page table entry</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">thread</span><span class="o">*</span><span class="w"> </span><span class="n">owner</span><span class="p">;</span><span class="w">               </span><span class="c1">// Owner of the frame</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">list_elem</span><span class="w"> </span><span class="n">elem</span><span class="p">;</span><span class="w">              </span><span class="c1">// List element for list of all frames</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">pinned</span><span class="p">;</span><span class="w">                        </span><span class="c1">// Is frame pinned</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">};</span>
+</code></pre></div>
+<p>然后需要实现 supplmentary page table, 用于记录 page 的信息, 状态, 在 page fault 时会以这些东西决定加载 page 方式.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">enum</span><span class="w"> </span><span class="n">sup_page_type</span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="n">PAGE_ZERO</span><span class="p">,</span><span class="w">    </span><span class="c1">// All zero page</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="n">PAGE_FILE</span><span class="p">,</span><span class="w">    </span><span class="c1">// Page from file</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="n">PAGE_STACK</span><span class="p">,</span><span class="w">   </span><span class="c1">// Page on frame</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="n">PAGE_MMAP</span><span class="w">     </span><span class="c1">// Memory mapped file</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">};</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">struct</span><span class="w"> </span><span class="nc">sup_page_table_entry</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">uaddr</span><span class="p">;</span><span class="w">              </span><span class="c1">// User virtual address</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">kaddr</span><span class="p">;</span><span class="w">              </span><span class="c1">// Kernel virtual address</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">writable</span><span class="p">;</span><span class="w">            </span><span class="c1">// Is page writable</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">sup_page_type</span><span class="w"> </span><span class="n">type</span><span class="p">;</span><span class="w">  </span><span class="c1">// Type of page</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">lock</span><span class="w"> </span><span class="n">spte_lock</span><span class="p">;</span><span class="w">    </span><span class="c1">// Lock for page (wait for swapping to be done)</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">file</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">;</span><span class="w">        </span><span class="c1">// File to load page from</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="kt">off_t</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span><span class="w">             </span><span class="c1">// Offset in file</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">read_bytes</span><span class="p">;</span><span class="w">      </span><span class="c1">// Number of bytes to read</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">zero_bytes</span><span class="p">;</span><span class="w">      </span><span class="c1">// Number of bytes to zero</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">hash_elem</span><span class="w"> </span><span class="n">elem</span><span class="p">;</span><span class="w">    </span><span class="c1">// Hash element for supplementary page table</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">swap_index</span><span class="p">;</span><span class="w">        </span><span class="c1">// Swap index</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="p">};</span>
+</code></pre></div>
+<p>还需要实现 swap, 使用 device/block.h 里面的 block device, 用于读写 swap slot.</p>
+<p>在 <code>swap_init</code> 里面初始化 swap slot, <code>block_get_role (BLOCK_SWAP);</code> 可以获取 swap slot 的 block device.</p>
+<p>按照 page 大小决定每个 page 需要多少 sector, 建立一个总 sector 数除以每个 page 需要的 sector 数的 bitmap, 每个 bit 代表这个 swap slot 是否被占用.</p>
+<h3 id="_5">同步问题<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<ol>
+<li>当多个进程申请 frame 时的 race condition<ul>
+<li><code>palloc_get_page</code> 内置了锁, 保证分配是原子的</li>
+<li>一个 frame 从 <code>palloc_get_page</code> 获取到, 另一个需要 evict frame, 两个进程的 critical section 是修改 frame table 部分, 需要加锁</li>
+<li>两个进程同时 evict frame, 需要保证不 evict 同一个 frame</li>
+</ul>
+</li>
+<li>正在被 evict 的 frame 被原来的 frame 持有者访问<ul>
+<li>保证在换出等等操作之前进入如下状态: 原来持有者通过 page table 访问此 frame 时引起 page fault</li>
+<li>需要使用 <code>pagedir_clear_page</code> 清除 page table 中的映射关系</li>
+</ul>
+</li>
+<li>一个进程 page fault 并且获取到了 frame, 另一个进程尝试 evict 这个 frame.</li>
+<li>正在从 disk 读取 page 时, 此 page 的 frame 不应该被其他进程 evict<ul>
+<li>evict 时从 frame table 移除.</li>
+<li>读取完成之前不加入 frame table.</li>
+</ul>
+</li>
+<li>在 syscall 时发生的 page fault<ul>
+<li>参见 Task 4</li>
+</ul>
+</li>
+<li>多个 page fault 的处理可以并发进行<ul>
+<li>保证对同一个 frame 的操作是串行的</li>
+<li>需要 I/O 的靠 I/O 的锁互斥</li>
+<li>需要 swap 的靠 swap block 的锁互斥</li>
+</ul>
+</li>
+<li>在一次 load 完成之前, 获取到的 frame 不应该被 evict.<ul>
+<li>先 pin 住, 按需要 unpin</li>
+</ul>
+</li>
+<li>在一个 page 的 frame 完成 evict 之前, 那个 page 的 fault 不能被同时处理<ul>
+<li><code>spte_lock</code> 保证 fault 处理时, 被 evict 的 frame 已经完整保存到 swap disk.</li>
+</ul>
+</li>
+</ol>
+<h3 id="page-fault_1">page fault 情况与对策<a class="headerlink" href="#page-fault_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>情况编号</th>
+<th><code>not_present</code></th>
+<th><code>write</code></th>
+<th><code>user</code></th>
+<th>情况</th>
+<th>对策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1)</td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td>内核非法访问</td>
+<td><code>exit(-1)</code></td>
+</tr>
+<tr>
+<td>(2)</td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td>用户非法访问</td>
+<td><code>exit(-1)</code></td>
+</tr>
+<tr>
+<td>(3)</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td>同理 1</td>
+<td>同</td>
+</tr>
+<tr>
+<td>(4)</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td>同理 2</td>
+<td>同</td>
+</tr>
+<tr>
+<td>(5)</td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+<td>在 syscall 中遇到 page fault</td>
+<td>尝试载入 &amp; pin, 在 syscall 结束之前 unpin</td>
+</tr>
+<tr>
+<td>(6)</td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+<td>被换出/没有加载/栈增长</td>
+<td>尝试载入/栈增长</td>
+</tr>
+<tr>
+<td>(7)</td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+<td>同 5</td>
+<td>同</td>
+</tr>
+<tr>
+<td>(8)</td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td><code>true</code></td>
+<td>同 6</td>
+<td>同</td>
+</tr>
+</tbody>
+</table>
+<h2 id="task-2-stack-growth">Task 2: Stack growth<a class="headerlink" href="#task-2-stack-growth" title="Permanent link">&para;</a></h2>
+<p>在最开始分配一个 page 作为栈, 后续考虑栈增长的情况. 按照 80x86 <code>PUSHA</code> 最多在 <code>esp</code> 低 32 字节的位置引发 page fault, 考虑将 32 字节作为分界, 低于 32 字节时分配新的 page, 否则视为非法访问.</p>
+<p>栈增长锁分配的 frame 也可能被 swap out, 此时总是需要保存 frame 的内容, 以便在需要时载入.</p>
+<p>可以限制一个进程最大栈区大小, 以防止无限增长.</p>
+<h2 id="task-3-memory-mapping-files">Task 3: Memory mapping files<a class="headerlink" href="#task-3-memory-mapping-files" title="Permanent link">&para;</a></h2>
+<p>mmap 会将文件映射到连续的页, 映射之前检查这些页没有被映射.</p>
+<p>映射时依然需要 lazy loading, 只设置 supplmentary page table 信息, 在访问时载入.</p>
+<p>在被 evict 时, 将修改写回文件.</p>
+<p>mummap 会将文件从内存中移除, 将 dirty 的 page 写回文件.</p>
+<p>为了避免写的时候 (此时获取到了 <code>filesys_lock</code>) 发生 page fault, 在写之前加载 page 并且 pin 住, 写完之后释放 spte 和对应的 frame.</p>
+<h2 id="task-4-accessing-user-memory">Task 4: Accessing user memory<a class="headerlink" href="#task-4-accessing-user-memory" title="Permanent link">&para;</a></h2>
+<p>需要保证在进入内核时, 用户内存是合法的, 且需要避免一些持有资源情况下遇到 page fault 的情况.</p>
+<p>情景: 进程 A syscall read, 但是 read 的 buffer 不在内存中, 需要为 buffer 分配 frame, 此时 A 持有 <code>filesys_lock</code>. 进程 B 引发 page fault, 获取了 <code>frame_table_lock</code>, 但是为了 evict frame 需要获取 <code>filesys_lock</code> (例如从 B 的可执行文件读 bss 信息, 把 evict 的部分写回文件系统), 此时 A 和 B 互相等待对方释放锁, 造成死锁.</p>
+<p>在内核发生 page fault (保证其他部分没有错误, 则此时必然是 syscall 中的 page fault) 时, 加载同时 pin 住 frame, 在 syscall 结束之前 unpin.</p>
+<h2 id="_6">实现<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h3 id="swap">swap<a class="headerlink" href="#swap" title="Permanent link">&para;</a></h3>
+<p>定义于 <code>vm/swap.h</code>, <code>vm/swap.c</code>, 用于管理 swap slot.</p>
+<p>在 <code>thread/vaddr.h</code> 里面定义了 <code>PGSIZE</code> (4096), 表示 page 的大小. 在 <code>devices/block.h</code> 里面定义了 <code>BLOCK_SECTOR_SIZE</code>, 表示 block 的大小 (512), 于是每个换出的 page  占用的 sector 数即为 <code>PGSIZE / BLOCK_SECTOR_SIZE</code>.</p>
+<p>包含一个 bitmap 用于记录 swap slot 的使用情况. 在初始化时, 通过 <code>block_get_role (BLOCK_SWAP)</code> 获取 swap block, 然后计算出 swap slot 的数量, 初始化 bitmap.</p>
+<p>由于不确定 block 是否支持并发读写, 所以需要加全局锁 <code>swap_lock</code>, 如果可以并发读写, 那么只需要锁 <code>swap_bitmap</code> 即可.</p>
+<p>在 <code>swap_out</code> 时, 找到一个空闲的 swap slot, 设置为占用, 然后将 frame 写入 swap slot, 返回 swap slot 的编号.</p>
+<p>在 <code>swap_in</code> 时, 读取 swap slot 的内容, 将其写入 frame, 然后释放 swap slot.</p>
+<h3 id="frame">frame<a class="headerlink" href="#frame" title="Permanent link">&para;</a></h3>
+<p>定义于 <code>vm/frame.h</code> ,<code>vm/frame.c</code>, 用于管理 frame.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">frame_table_entry</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">kaddr</span><span class="p">;</span><span class="w">                        </span><span class="c1">// Kernel address</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">sup_page_table_entry</span><span class="w"> </span><span class="o">*</span><span class="n">spte</span><span class="p">;</span><span class="w">  </span><span class="c1">// Supplementary page table entry</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">thread</span><span class="o">*</span><span class="w"> </span><span class="n">owner</span><span class="p">;</span><span class="w">               </span><span class="c1">// Owner of the frame</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">list_elem</span><span class="w"> </span><span class="n">elem</span><span class="p">;</span><span class="w">              </span><span class="c1">// List element for list of all frames</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">pinned</span><span class="p">;</span><span class="w">                        </span><span class="c1">// Is frame pinned</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">};</span>
+</code></pre></div>
+<p>frame 需要实现包含了 eviction 的与 <code>palloc_get_page (PAL_USER)</code>, <code>palloc_free_page</code> 同功能的函数.</p>
+<p>由于使用 <code>list</code> 来管理 frame, 所以需要加锁 <code>frame_lock</code>.</p>
+<h3 id="page">page<a class="headerlink" href="#page" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">enum</span><span class="w"> </span><span class="n">sup_page_type</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="n">PAGE_ZERO</span><span class="p">,</span><span class="w">    </span><span class="c1">// All zero page</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="n">PAGE_FILE</span><span class="p">,</span><span class="w">    </span><span class="c1">// Page from file</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="n">PAGE_STACK</span><span class="p">,</span><span class="w">   </span><span class="c1">// Page on frame</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="n">PAGE_MMAP</span><span class="w">     </span><span class="c1">// Memory mapped file</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="p">};</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">struct</span><span class="w"> </span><span class="nc">sup_page_table_entry</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">uaddr</span><span class="p">;</span><span class="w">              </span><span class="c1">// User virtual address</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">kaddr</span><span class="p">;</span><span class="w">              </span><span class="c1">// Kernel virtual address</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">writable</span><span class="p">;</span><span class="w">            </span><span class="c1">// Is page writable</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">sup_page_type</span><span class="w"> </span><span class="n">type</span><span class="p">;</span><span class="w">  </span><span class="c1">// Type of page</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">lock</span><span class="w"> </span><span class="n">spte_lock</span><span class="p">;</span><span class="w">    </span><span class="c1">// Lock for page (wait for swapping to be done)</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">file</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">;</span><span class="w">        </span><span class="c1">// File to load page from</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">    </span><span class="kt">off_t</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span><span class="w">             </span><span class="c1">// Offset in file</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">read_bytes</span><span class="p">;</span><span class="w">      </span><span class="c1">// Number of bytes to read</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">zero_bytes</span><span class="p">;</span><span class="w">      </span><span class="c1">// Number of bytes to zero</span>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">hash_elem</span><span class="w"> </span><span class="n">elem</span><span class="p">;</span><span class="w">    </span><span class="c1">// Hash element for supplementary page table</span>
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">swap_index</span><span class="p">;</span><span class="w">        </span><span class="c1">// Swap index</span>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">  </span><span class="p">};</span>
+</code></pre></div>
+<p>在 <code>struct thread</code> 内加上 <code>struct hash sup_page_table</code>, 注意 <code>hash</code> 初始化时需要分配内存用于创建桶, 需要在系统初始化完成后才能调用, 不在创建 <code>main</code> 等内核线程的时候调用即可.</p>
+<h4 id="supplementary-page">创建 supplementary page<a class="headerlink" href="#supplementary-page" title="Permanent link">&para;</a></h4>
+<p>在 <code>mmap</code>, <code>load</code> 加载可执行文件, page fault 中触发栈增长时创建.</p>
+<h4 id="supplementary-page-table">使用 supplementary page table<a class="headerlink" href="#supplementary-page-table" title="Permanent link">&para;</a></h4>
+<p>spt 的用处即在发生 page fault 时, 提供关于该 page 的额外信息.</p>
+<p>通过 hash table, 以地址快速查找对应的 spte.</p>
+<h3 id="_7">加载可执行文件<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>实现 lazy loading</p>
+<p>一个 page 有以下几种情况:</p>
+<ul>
+<li>来自可执行文件 (程序静态区内存)<ul>
+<li>没有加载</li>
+<li>加载到了内存里面, dirty / 不 dirty<ul>
+<li>由是否 dirty 决定是否需要换出.</li>
+<li>一旦 dirty 就永远被标记为 dirty</li>
+</ul>
+</li>
+<li>被换出, 在 swap slot 里面</li>
+</ul>
+</li>
+<li>来自文件系统 (mmap) <code>PAGE_MMAP</code><ul>
+<li>加载到了内存里面, dirty / 不 dirty</li>
+<li>被换出, 即被存回文件里面</li>
+</ul>
+</li>
+<li>栈<ul>
+<li>栈增长新增的</li>
+<li>被换出</li>
+</ul>
+</li>
+</ul>
+<h3 id="page-fault_2">处理 page fault<a class="headerlink" href="#page-fault_2" title="Permanent link">&para;</a></h3>
+<h4 id="_8">栈增长<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h4>
+<p>32 位机器, <code>PUSHA</code> 指令会将 32 字节的数据压入栈, 所以可以认为最大的栈增长是一次 32 字节的操作, 超过 32 字节的操作视为非法访问.</p>
+<p>同时检查当前总计的栈区大小, 如果超过了限制, 也视为非法访问.</p>
+<p>但是存在一个问题, 如果在 kernel mode 触发 page fault, 此时没有栈指针的信息, 需要在 syscall 时记录以实现 syscall 中栈增长.</p>
+<h4 id="_9">加载<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h4>
+<p>在 kernel 情况下发生的 page fault, 需要判断是否是合法访问, 如果是合法访问, 需要将 page 加入到 frame table 中, 并 pin 住, 在 syscall 结束之前 unpin, 防止死锁</p>
+<p>在 user 情况下发生的 page fault 不考虑 pin 的问题.</p>
+<h3 id="mmapmunmap">mmap/munmap<a class="headerlink" href="#mmapmunmap" title="Permanent link">&para;</a></h3>
+<p>在 <code>struct thread</code> 内加上 <code>struct list mmap_list</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">mmap_file</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">mapid_t</span><span class="w"> </span><span class="n">mapid</span><span class="p">;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">file</span><span class="w"> </span><span class="o">*</span><span class="n">file</span><span class="p">;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">list_elem</span><span class="w"> </span><span class="n">elem</span><span class="p">;</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">base</span><span class="p">;</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="p">};</span>
+</code></pre></div>
+<p><code>mmap</code> 时需要 <code>file_reopen</code> 以保证文件描述符不会被关闭, 记录 <code>base</code> 以在 <code>munmap</code> 时查找然后释放对应的 spte.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "navigation.tracking", "navigation.tabs", "navigation.indexes", "navigation.top"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d6f25eb3.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

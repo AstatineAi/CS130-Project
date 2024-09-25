@@ -1,0 +1,1105 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../proj1/">
+      
+      
+        <link rel="next" href="../proj3/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.37">
+    
+    
+      
+        <title>Project 2 - CS130 操作系统 笔记</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.8c3ca2c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#project-2-user-program" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="CS130 操作系统 笔记" class="md-header__button md-logo" aria-label="CS130 操作系统 笔记" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CS130 操作系统 笔记
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Project 2
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indego"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../lec0/" class="md-tabs__link">
+          
+  
+    
+  
+  课程笔记
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../proj1/" class="md-tabs__link">
+          
+  
+    
+  
+  pintos
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="CS130 操作系统 笔记" class="md-nav__button md-logo" aria-label="CS130 操作系统 笔记" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    CS130 操作系统 笔记
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    首页
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    课程笔记
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            课程笔记
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../lec0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lecture 0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    pintos
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            pintos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj1/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 1
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Project 2
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Project 2
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      调试
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      分析
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统限制
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 1
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 2
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 3
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      确定调用种类
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#halt" class="md-nav__link">
+    <span class="md-ellipsis">
+      halt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exitexecwait" class="md-nav__link">
+    <span class="md-ellipsis">
+      exit，exec，wait
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syscall" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统相关 syscall
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      禁止访问非法地址
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 4
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../proj4/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project 4
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      调试
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      分析
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统限制
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 1
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 2
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 3
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Task 3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      确定调用种类
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#halt" class="md-nav__link">
+    <span class="md-ellipsis">
+      halt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exitexecwait" class="md-nav__link">
+    <span class="md-ellipsis">
+      exit，exec，wait
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syscall" class="md-nav__link">
+    <span class="md-ellipsis">
+      文件系统相关 syscall
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      禁止访问非法地址
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Task 4
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="project-2-user-program">Project 2: User Program<a class="headerlink" href="#project-2-user-program" title="Permanent link">&para;</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">No plagiarism</p>
+<p>If you are enrolled in CS130, you may not copy code from this repository.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">急了急了急了</p>
+<p>强烈建议从未修改的框架代码版本开始写 Project 2, 由于 Project 1 涉及到对 <code>thread</code>, <code>semaphore</code>, <code>lock</code> 等的修改, 可能在 Project 2 导致未知错误.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Overview</p>
+<ul>
+<li>Task1 : print termination messages</li>
+<li>Task2 : argument passing</li>
+<li>Task3 : system calls</li>
+<li>Task4 : deny writes to executables</li>
+</ul>
+</div>
+<h2 id="_1">调试<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>为了将可执行文件写入 pintos 的虚拟硬盘, 需要添加参数 <code>-p tests/userprog/filename -a filename</code>, 每个文件增加一组上述形式的参数.</p>
+<h2 id="_2">分析<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>在 <code>tests/userprog/Make.tests</code> 内有此 project 的自测数据点.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tests/userprog/args-none_SRC = tests/userprog/args.c
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>tests/userprog/args-single_SRC = tests/userprog/args.c
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>tests/userprog/args-multiple_SRC = tests/userprog/args.c
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>tests/userprog/args-many_SRC = tests/userprog/args.c
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>tests/userprog/args-dbl-space_SRC = tests/userprog/args.c
+</code></pre></div>
+<p>前面几个测试用到了 <code>args.c</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">test_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;args&quot;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">msg</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;begin&quot;</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">msg</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;argc = %d&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">argc</span><span class="p">);</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">argc</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="n">msg</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;argv[%d] = &#39;%s&#39;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"> </span><span class="c1">// 需要把 arg 分隔开</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">else</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="n">msg</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;argv[%d] = null&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">msg</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;end&quot;</span><span class="p">);</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// 我该怎么得到你, 亲爱的返回值?</span>
+</code></pre></div>
+<p>主要内容为打印命令行参数, 也就是需要实现为 user program 传参.</p>
+<p>分析调用过程: 在 <code>threads/init.c</code> 中, <code>main() -&gt; run_actions() -&gt; run_task() -&gt; process_wait (process_execute (task))</code></p>
+<p>看一下 <code>process_wait()</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">int</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">process_wait</span><span class="w"> </span><span class="p">(</span><span class="n">tid_t</span><span class="w"> </span><span class="n">child_tid</span><span class="w"> </span><span class="n">UNUSED</span><span class="p">)</span><span class="w"> </span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>按照注释里的内容, 这个函数作用是等待编号 <code>child_tid</code> 线程的运行结果, 如果 <em>那个线程被系统中止/传入的 <code>tid</code> 不存在/传入的 <code>tid</code> 代表的进程不是目前线程的子进程/这个线程已经有一个 <code>process_wait()</code> 在等待它</em> 则返回 <code>-1</code>, 否则返回它通过 <code>exit</code> 传递的返回值.</p>
+<h2 id="_3">文件系统限制<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>可能并发访问文件, 考虑加锁</li>
+<li>文件大小固定, 控制文件名长度不超过 14 字符</li>
+<li>没有虚拟内存, 文件必须占用连续的物理内存, 合理分配和回收</li>
+</ul>
+<h2 id="task-1">Task 1<a class="headerlink" href="#task-1" title="Permanent link">&para;</a></h2>
+<p>在一个进程退出时输出中止信息 (名称, exit code)</p>
+<p>在 <code>process.c</code> 内查找发现有一个 <code>process_exit()</code>, 用于释放一个进程分配的资源, 这个函数在 <code>thread_exit()</code> 被调用, 由于 pintos 的一个进程下没有多线程, 所以直接用该线程的 exit 代表.</p>
+<p>于是需要在 <code>process_exit()</code> 内加上信息打印.</p>
+<p>进程名称来自线程名称, 在 <code>process_excute()</code> 内打印, 发现 <code>file_name</code> 不仅传入了要运行的文件的名称, 还有运行参数, 是一行完整的指令, 需要手动按空格分离函数名和以空格 (可能多个空格) 分隔开的每个 command line args.</p>
+<p><code>process_execute()</code> 内, <code>palloc_get_page(0)</code> 获得了 kernel pool 的一个 page, 存储完整的命令, 在 <code>start_process()</code> 中 <code>load()</code> 加载可执行文件完毕后将其释放, <code>thread</code> 中的 <code>name</code> 使用 <code>memcpy</code> 复制到字符数组, 而 command line args 需要直接压到栈里面, 所以说可以通过在前面分配, 在 <code>start_process()</code> 内释放的形式临时保存命令行语句.</p>
+<p>这样, 在 <code>process_execute()</code> 时直接分割出可执行文件名称, 作为线程名称即可.</p>
+<p>你说得对, 但是我返回值呢?</p>
+<p>做不了一点, 看下一个 task</p>
+<h2 id="task-2">Task 2<a class="headerlink" href="#task-2" title="Permanent link">&para;</a></h2>
+<p>为  user program 传参.</p>
+<p>首先为了让 progress 跑起来, 把 <code>progress_wait()</code> 改成 <code>while(1)</code> 死循环, 防止被终止, 以后再实现正常的 wait.</p>
+<p>看完文档的例子:</p>
+<table>
+<thead>
+<tr>
+<th>Address</th>
+<th>Name</th>
+<th>Data</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0xbfffffc</td>
+<td>argv[3][...]</td>
+<td>bar\0</td>
+<td>char[4]</td>
+</tr>
+<tr>
+<td>0xbfffff8</td>
+<td>argv[2][...]</td>
+<td>foo\0</td>
+<td>char[4]</td>
+</tr>
+<tr>
+<td>0xbfffff5</td>
+<td>argv[1][...]</td>
+<td>-l\0</td>
+<td>char[3]</td>
+</tr>
+<tr>
+<td>0xbffffed</td>
+<td>argv[0][...]</td>
+<td>/bin/ls\0</td>
+<td>char[8]</td>
+</tr>
+<tr>
+<td>0xbffffec</td>
+<td>word-align</td>
+<td>0</td>
+<td>uint8_t</td>
+</tr>
+<tr>
+<td>0xbffffe8</td>
+<td>argv[4]</td>
+<td>0</td>
+<td>char *</td>
+</tr>
+<tr>
+<td>0xbffffe4</td>
+<td>argv[3]</td>
+<td>0xbfffffc</td>
+<td>char *</td>
+</tr>
+<tr>
+<td>0xbffffe0</td>
+<td>argv[2]</td>
+<td>0xbfffff8</td>
+<td>char *</td>
+</tr>
+<tr>
+<td>0xbffffdc</td>
+<td>argv[1]</td>
+<td>0xbfffff5</td>
+<td>char *</td>
+</tr>
+<tr>
+<td>0xbffffd8</td>
+<td>argv[0]</td>
+<td>0xbffffed</td>
+<td>char *</td>
+</tr>
+<tr>
+<td>0xbffffd4</td>
+<td>argv</td>
+<td>0xbffffd8</td>
+<td>char **</td>
+</tr>
+<tr>
+<td>0xbffffd0</td>
+<td>argc</td>
+<td>4</td>
+<td>int</td>
+</tr>
+<tr>
+<td>0xbffffcc</td>
+<td>return address</td>
+<td>0</td>
+<td>void (*)()</td>
+</tr>
+</tbody>
+</table>
+<p>指针最开始在 <code>PHYS_BASE</code> 的位置, 首先堆入每个 <code>argv</code> 的串的内容, 堆的时候指针向地址较小的方向移动, 保证每个串在内存上顺序, 且包含代表字符串结束的 <code>\0</code>, 串之间顺序无所谓, 保存地址指针.</p>
+<p>然后进行对齐.</p>
+<p>然后把 <code>argv[i]</code> 的地址, 以及 <code>argv</code> 的地址压入栈, 最后压入 <code>argc</code> 和 <code>return address</code>.</p>
+<p>此时传参结束, 汇编跳转后调用</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kt">void</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">_start</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">{</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="n">exit</span><span class="w"> </span><span class="p">(</span><span class="n">main</span><span class="w"> </span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">));</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+</code></pre></div>
+<p>开始运行 user program. 此时会调用 <code>syscall</code>, 进入 <code>syscall_handler</code> 环节.</p>
+<h2 id="task-3">Task 3<a class="headerlink" href="#task-3" title="Permanent link">&para;</a></h2>
+<p>实现 13 种 system call.</p>
+<p>system call 属于内部中断, 和之前的 timer interrupt 等 CPU 外设备造成的中断不同.</p>
+<p>首先查看 handler 如何处理 system call.</p>
+<p><code>syscall_init()</code> 保证了在程序使用 <code>int 0x30</code> 中断时调用 <code>syscall_handler()</code>, 查看 <code>src/lib/user/syscall.c</code> 宏, 使用汇编进行压栈, handler 需要从 <code>intr_frame</code> 获取信息.</p>
+<h3 id="_4">确定调用种类<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>宏有 <code>syscall0</code>, <code>syscall1</code>, <code>syscall2</code>, <code>syscall3</code> 四种, 压栈 syscall 类型和参数, 则可以从 <code>esp</code> 指针获取 system call 类型, 然后再向高地址移动 <code>esp</code> 获取后面的参数.</p>
+<p><code>syscall_id = *(int *)f-&gt;esp;</code></p>
+<h3 id="halt">halt<a class="headerlink" href="#halt" title="Permanent link">&para;</a></h3>
+<p>无参数, 直接关机.</p>
+<h3 id="exitexecwait">exit，exec，wait<a class="headerlink" href="#exitexecwait" title="Permanent link">&para;</a></h3>
+<p>问题: 进程在被 wait 之前调用 exit</p>
+<p>需要适当保存一个进程所有子进程的 exit status. 如果将 exit status 保存在 <code>struct thread</code> 里面, 在 <code>thread_exit()</code> 时, 会释放这个结构, 无法保存 exit status.</p>
+<p>可能有如下几种情况：</p>
+<ol>
+<li>子进程调用 <code>exit</code>，然后父进程调用 <code>wait</code></li>
+<li>父进程在子进程完成初始化之前调用 <code>wait</code>，访问了未初始化的内存</li>
+<li>子进程创建过程中，加载可执行文件/分配内存失败，父进程调用 <code>wait</code> 需要得到合法的返回值</li>
+<li>子进程已经被 <code>wait</code>，父进程再次调用 <code>wait</code>，应该返回 -1</li>
+<li>父进程终止时子进程的返回情况不再被需要</li>
+</ol>
+<p>考虑使用 <code>thread/malloc</code> 内实现的 <code>malloc()</code>, 这个函数在 kernel pool 内分配内存, 保证了父进程, 子进程都可以在内核态访问到, 且在进程终结时不会被立即释放, 可以等待父进程去释放.</p>
+<p>在分配内容较少时, 避免使用 <code>palloc_get_page(0)</code></p>
+<ol>
+<li>在 <code>thread_create()</code> 时, 为子进程分配内存, 返回 <code>tid</code>，初始化用于让父进程等待加载的一个信号量</li>
+<li>父进程 <code>sema_down()</code> 等待子进程加载完毕</li>
+<li>在子进程加载过程中，保存加载情况，保证中途加载失败然后 <code>sema_up()</code> 可以让父进程得知加载失败</li>
+<li>为了实现 <code>wait</code>，为每个进程创建子进程列表，列表内元素负责保存子进程的 <code>tid</code> 和 <code>exit status</code>，且包含一个信号量，用于父进程等待子进程结束，在 <code>wait</code> 时，父进程 <code>sema_up()</code>，在子进程结束时，若父进程存活则找到父进程的列表里面对应元素，更新 <code>exit status</code>，然后 <code>sema_up()</code> 通知父进程</li>
+<li>进程终止时，释放子进程列表</li>
+</ol>
+<h3 id="syscall">文件系统相关 syscall<a class="headerlink" href="#syscall" title="Permanent link">&para;</a></h3>
+<p>包含 <code>create</code>, <code>remove</code>, <code>open</code>, <code>filesize</code>, <code>read</code>, <code>write</code>, <code>seek</code>, <code>tell</code>, <code>close</code></p>
+<p>实现一套为每个进程管理文件的文件描述符（file descriptor）体系。在打开文件时分配 <code>fd</code>，注意 <code>fd</code> 不能为 0, 1，这两个文件描述符用于标准输入输出。</p>
+<p>在进程终止时，关闭所有文件，清空文件描述符表。</p>
+<h3 id="_5">禁止访问非法地址<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>我采用了文档里面提到的：在实际访问之前，访问每个可能被用到的地址，如果有非法访问，触发 page fault，然后在 page fault handler 里面处理。</p>
+<p>访问用到的函数在文档里面已经给出。在 syscall 需要任何读/写操作时，先全部访问一遍（字符串则需要访问每个字符），然后再进行操作。</p>
+<p>错误的地址访问会触发 page fault，所有的 page fault 会被 <code>userprog/excepion.c</code> 中对应的 handler 处理，注意到原本的策略是使用 <code>thread_exit()</code>，现在实现了用户进程，改为使用 exit system call。根据 <code>page_fault()</code> 里面提供的 <code>not_present</code>，<code>write</code>，<code>user</code> 三个 flag 选择不同的处理方式即可。</p>
+<h2 id="task-4">Task 4<a class="headerlink" href="#task-4" title="Permanent link">&para;</a></h2>
+<p>拒绝用户写入可执行文件.</p>
+<p>在 <code>load</code> 加载完成后使用 <code>filesys</code> 下相应代码拒绝写入。</p>
+<p>首先此时任何涉及到文件系统的代码都应该互斥，于是整体加一个 <code>filesys_lock</code> 保护, 在 <code>filesys/filesys.h</code> 内 <code>extern struct lock filesys_lock;</code> 方便调用.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.annotate", "navigation.tracking", "navigation.tabs", "navigation.indexes", "navigation.top"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d6f25eb3.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
