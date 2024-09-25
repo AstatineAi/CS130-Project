@@ -40,6 +40,13 @@ free_map_allocate (size_t cnt, block_sector_t *sectorp)
   return sector != BITMAP_ERROR;
 }
 
+/* Test if SECTOR is free. */
+bool
+free_map_test (block_sector_t sector) 
+{
+  return bitmap_test (free_map, sector);
+}
+
 /* Makes CNT sectors starting at SECTOR available for use. */
 void
 free_map_release (block_sector_t sector, size_t cnt)
@@ -64,6 +71,7 @@ free_map_open (void)
 void
 free_map_close (void) 
 {
+  bitmap_write (free_map, free_map_file);
   file_close (free_map_file);
 }
 
@@ -73,7 +81,7 @@ void
 free_map_create (void) 
 {
   /* Create inode. */
-  if (!inode_create (FREE_MAP_SECTOR, bitmap_file_size (free_map)))
+  if (!inode_create (FREE_MAP_SECTOR, bitmap_file_size (free_map), false))
     PANIC ("free map creation failed");
 
   /* Write bitmap to file. */

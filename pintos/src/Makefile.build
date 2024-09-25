@@ -12,15 +12,15 @@ include ../../tests/Make.tests
 kernel.bin: CPPFLAGS += -I$(SRCDIR)/lib/kernel
 
 # Core kernel.
-threads_SRC  = threads/start.S		 # Startup code.
-threads_SRC += threads/init.c		 # Main program.
-threads_SRC += threads/thread.c		 # Thread management core.
-threads_SRC += threads/switch.S		 # Thread switch routine.
-threads_SRC += threads/interrupt.c	 # Interrupt core.
-threads_SRC += threads/intr-stubs.S	 # Interrupt stubs.
-threads_SRC += threads/synch.c		 # Synchronization.
-threads_SRC += threads/palloc.c	 	 # Page allocator.
-threads_SRC += threads/malloc.c	     # Subpage allocator.
+threads_SRC  = threads/start.S		# Startup code.
+threads_SRC += threads/init.c		# Main program.
+threads_SRC += threads/thread.c		# Thread management core.
+threads_SRC += threads/switch.S		# Thread switch routine.
+threads_SRC += threads/interrupt.c	# Interrupt core.
+threads_SRC += threads/intr-stubs.S	# Interrupt stubs.
+threads_SRC += threads/synch.c		# Synchronization.
+threads_SRC += threads/palloc.c		# Page allocator.
+threads_SRC += threads/malloc.c		# Subpage allocator.
 
 # Device driver code.
 devices_SRC  = devices/pit.c		# Programmable interrupt timer chip.
@@ -51,7 +51,6 @@ lib/kernel_SRC  = lib/kernel/debug.c	# Debug helpers.
 lib/kernel_SRC += lib/kernel/list.c	# Doubly-linked lists.
 lib/kernel_SRC += lib/kernel/bitmap.c	# Bitmaps.
 lib/kernel_SRC += lib/kernel/hash.c	# Hash tables.
-lib/kernel_SRC += lib/kernel/heap.c # Heaps.
 lib/kernel_SRC += lib/kernel/console.c	# printf(), putchar().
 
 # User process code.
@@ -72,6 +71,7 @@ filesys_SRC += filesys/file.c		# Files.
 filesys_SRC += filesys/directory.c	# Directories.
 filesys_SRC += filesys/inode.c		# File headers.
 filesys_SRC += filesys/fsutil.c		# Utilities.
+filesys_SRC += filesys/cache.c      # Caching.
 
 SOURCES = $(foreach dir,$(KERNEL_SUBDIRS),$($(dir)_SRC))
 OBJECTS = $(patsubst %.c,%.o,$(patsubst %.S,%.o,$(SOURCES)))

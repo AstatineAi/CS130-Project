@@ -1,9 +1,10 @@
 #ifndef DEVICES_TIMER_H
 #define DEVICES_TIMER_H
 
-#include <heap.h>
 #include <round.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "threads/thread.h"
 
 /* Number of timer interrupts per second. */
 #define TIMER_FREQ 100
@@ -16,7 +17,6 @@ int64_t timer_elapsed (int64_t);
 
 /* Sleep and yield the CPU to other threads. */
 void timer_sleep (int64_t ticks);
-void timer_wake (int64_t cur_time);
 void timer_msleep (int64_t milliseconds);
 void timer_usleep (int64_t microseconds);
 void timer_nsleep (int64_t nanoseconds);

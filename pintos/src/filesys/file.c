@@ -68,8 +68,10 @@ file_get_inode (struct file *file)
 off_t
 file_read (struct file *file, void *buffer, off_t size) 
 {
+  inode_down_reader_sema(file -> inode);
   off_t bytes_read = inode_read_at (file->inode, buffer, size, file->pos);
   file->pos += bytes_read;
+  inode_up_reader_sema(file -> inode);
   return bytes_read;
 }
 
@@ -81,7 +83,10 @@ file_read (struct file *file, void *buffer, off_t size)
 off_t
 file_read_at (struct file *file, void *buffer, off_t size, off_t file_ofs) 
 {
-  return inode_read_at (file->inode, buffer, size, file_ofs);
+  inode_down_reader_sema(file -> inode);
+  off_t bytes_read = inode_read_at (file->inode, buffer, size, file_ofs);
+  inode_up_reader_sema(file -> inode);
+  return bytes_read;
 }
 
 /* Writes SIZE bytes from BUFFER into FILE,
@@ -145,7 +150,10 @@ off_t
 file_length (struct file *file) 
 {
   ASSERT (file != NULL);
-  return inode_length (file->inode);
+  // inode_down_reader_sema(file->inode);
+  off_t result = inode_length (file->inode);
+  // inode_up_reader_sema(file->inode);
+  return result;
 }
 
 /* Sets the current position in FILE to NEW_POS bytes from the

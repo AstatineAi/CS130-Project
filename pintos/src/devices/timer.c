@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "devices/pit.h"
 #include "threads/interrupt.h"
-#include "threads/malloc.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
   
@@ -25,25 +24,14 @@ static int64_t ticks;
    Initialized by timer_calibrate(). */
 static unsigned loops_per_tick;
 
+/* List storing sleeping_threads. x*/
+struct list sleeping_threads;
+
 static intr_handler_func timer_interrupt;
 static bool too_many_loops (unsigned loops);
 static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
-
-/* Heap storing sleeping threads. */
-static struct heap sleep_thread_heap;
-
-static heap_less_func cmp_awake_time;
-
-static bool
-cmp_awake_time (const heap_elem a,
-                const heap_elem b)
-{
-  struct thread *elem_a = (struct thread *)a;
-  struct thread *elem_b = (struct thread *)b;
-  return elem_a->wake_time > elem_b->wake_time;
-}
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -52,7 +40,7 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
-  heap_init (&sleep_thread_heap, cmp_awake_time);
+  list_init (&sleeping_threads);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -105,33 +93,14 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  if (ticks < 0)
-    return;
-
+  if(ticks <= 0) return;
+  ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
-  struct thread *t = thread_current ();
-  t->wake_time = timer_ticks () + ticks;
-  heap_push (&sleep_thread_heap, t);
-  thread_block ();
+  int64_t start = timer_ticks ();
+  thread_current() -> wake_time = start + ticks;
+  list_insert_ordered(&sleeping_threads, &thread_current() -> elem, cmp_wake, NULL);
+  thread_block();
   intr_set_level (old_level);
-}
-
-/* Put threads that have waited for enough amount of time
-   to ready list. */
-void
-timer_wake (int64_t cur_time)
-{
-  while (!heap_empty (&sleep_thread_heap))
-  {
-    struct thread *top = (struct thread *)
-                          heap_top (&sleep_thread_heap);
-    if (top->wake_time > cur_time)
-      break;
-    heap_pop (&sleep_thread_heap);
-    thread_unblock (top);
-    if (top->priority > thread_current()->priority)
-      intr_yield_on_return ();
-  }
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -209,8 +178,19 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  timer_wake (ticks);
   thread_tick ();
+  struct list_elem *elem;
+  struct thread *t = NULL;
+  while (!list_empty(&sleeping_threads)){
+    elem = list_front(&sleeping_threads);
+    t = list_entry(elem, struct thread, elem);
+    if (t != NULL && t -> wake_time <= ticks)
+    {
+      list_remove(elem);
+      thread_unblock(t);
+    }
+    else break;
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
