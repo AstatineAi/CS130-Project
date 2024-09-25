@@ -147,19 +147,50 @@ system call 属于内部中断, 和之前的 timer interrupt 等 CPU 外设备�
 
 无参数, 直接关机.
 
-### exit
-
-一个参数, 为 user program 返回值.
+### exit，exec，wait
 
 问题: 进程在被 wait 之前调用 exit
 
 需要适当保存一个进程所有子进程的 exit status. 如果将 exit status 保存在 `struct thread` 里面, 在 `thread_exit()` 时, 会释放这个结构, 无法保存 exit status.
 
+可能有如下几种情况：
+
+1. 子进程调用 `exit`，然后父进程调用 `wait`
+2. 父进程在子进程完成初始化之前调用 `wait`，访问了未初始化的内存
+3. 子进程创建过程中，加载可执行文件/分配内存失败，父进程调用 `wait` 需要得到合法的返回值
+4. 子进程已经被 `wait`，父进程再次调用 `wait`，应该返回 -1
+5. 父进程终止时子进程的返回情况不再被需要
+
 考虑使用 `thread/malloc` 内实现的 `malloc()`, 这个函数在 kernel pool 内分配内存, 保证了父进程, 子进程都可以在内核态访问到, 且在进程终结时不会被立即释放, 可以等待父进程去释放.
 
 在分配内容较少时, 避免使用 `palloc_get_page(0)`
+
+1. 在 `thread_create()` 时, 为子进程分配内存, 返回 `tid`，初始化用于让父进程等待加载的一个信号量
+2. 父进程 `sema_down()` 等待子进程加载完毕
+3. 在子进程加载过程中，保存加载情况，保证中途加载失败然后 `sema_up()` 可以让父进程得知加载失败
+4. 为了实现 `wait`，为每个进程创建子进程列表，列表内元素负责保存子进程的 `tid` 和 `exit status`，且包含一个信号量，用于父进程等待子进程结束，在 `wait` 时，父进程 `sema_up()`，在子进程结束时，若父进程存活则找到父进程的列表里面对应元素，更新 `exit status`，然后 `sema_up()` 通知父进程
+5. 进程终止时，释放子进程列表
+
+### 文件系统相关 syscall
+
+包含 `create`, `remove`, `open`, `filesize`, `read`, `write`, `seek`, `tell`, `close`
+
+实现一套为每个进程管理文件的文件描述符（file descriptor）体系。在打开文件时分配 `fd`，注意 `fd` 不能为 0, 1，这两个文件描述符用于标准输入输出。
+
+在进程终止时，关闭所有文件，清空文件描述符表。
+
+### 禁止访问非法地址
+
+我采用了文档里面提到的：在实际访问之前，访问每个可能被用到的地址，如果有非法访问，触发 page fault，然后在 page fault handler 里面处理。
+
+访问用到的函数在文档里面已经给出。在 syscall 需要任何读/写操作时，先全部访问一遍（字符串则需要访问每个字符），然后再进行操作。
+
+错误的地址访问会触发 page fault，所有的 page fault 会被 `userprog/excepion.c` 中对应的 handler 处理，注意到原本的策略是使用 `thread_exit()`，现在实现了用户进程，改为使用 exit system call。根据 `page_fault()` 里面提供的 `not_present`，`write`，`user` 三个 flag 选择不同的处理方式即可。
 
 ## Task 4
 
 拒绝用户写入可执行文件.
 
+在 `load` 加载完成后使用 `filesys` 下相应代码拒绝写入。
+
+首先此时任何涉及到文件系统的代码都应该互斥，于是整体加一个 `filesys_lock` 保护, 在 `filesys/filesys.h` 内 `extern struct lock filesys_lock;` 方便调用.
